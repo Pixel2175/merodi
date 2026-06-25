@@ -57,7 +57,14 @@ def compile_md_to_html(md_file:str, html_dest:str, config =None):
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     info(f"Building {GRAY(md_file)}...")
     md_content = read_file(md_file)
-    raw_html_content = markdown(md_content)
+    raw_html_content = markdown(
+        md_content,
+        extensions=[
+            "extra",
+            "toc",
+            "codehilite",
+        ]
+    )
     filtered_html = html_filter(raw_html_content)
     html_content = jinja_handler(md_file, filtered_html, config)
     save_html(html_content, html_dest)
