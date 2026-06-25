@@ -1,0 +1,24 @@
+[project]
+name = "merodi"
+version = "0.1.0"
+description = "A markdown-based static site generator."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "markdown",
+    "jinja2",
+    "pywebview",
+    "watchdog",
+	"PyGObject",
+]
+
+[project.scripts]
+merodi = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
