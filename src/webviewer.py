@@ -124,7 +124,7 @@ def run(project_path):
         Thread(target=server.serve_forever, daemon=True).start()
 
         window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
-        watch_files(window, tree_config, webview_config, [ tree_config.markdown, tree_config.static, tree_config.plugins ])
+        watch_files(window, tree_config, webview_config )
         webview.start()
 
 
