@@ -73,7 +73,7 @@ def reload(window, file, tree_config, webview_config):
     except Exception as e:
         window.load_url(f"data:text/html,{html_fatal(e, f'Failed to reload {file}')}")
 
-def watch_files(window, tree_config, webview_config, files: list[str]):
+def watch_files(window, tree_config, webview_config):
     last_reload = {}
     class ReloadHandler(FileSystemEventHandler):
         def on_modified(self, event):
