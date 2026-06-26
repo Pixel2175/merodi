@@ -42,7 +42,6 @@ def http_server(host, port, routes):
             return resolved
 
         def send_error(self, code, message=None, explain=None):
-            # html = html_fatal(code, self.path, message, explain)
             html = html_fatal(Exception(f"{code}: {message}"), explain or self.path)
 
             self.send_response(code)
