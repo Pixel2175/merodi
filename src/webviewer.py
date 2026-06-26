@@ -93,7 +93,7 @@ def watch_files(window, tree_config, webview_config, files: list[str]):
 
     observer = Observer()
     handler = ReloadHandler()
-    for file in files:
+    for file in [tree_config.markdown, tree_config.templates, tree_config.plugins, tree_config.static]:
         observer.schedule(
             handler,
             path=file,
