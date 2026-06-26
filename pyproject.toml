@@ -10,6 +10,7 @@ dependencies = [
     "pywebview",
     "watchdog",
 	"PyGObject",
+	"pymdown-extensions",
 ]
 
 [project.scripts]

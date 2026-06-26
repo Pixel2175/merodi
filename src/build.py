@@ -68,11 +68,21 @@ def compile_md_to_html(md_file:str, html_dest:str, config =None):
     md_content = read_file(md_file)
     raw_html_content = markdown(
         md_content,
-        extensions=[
-            "extra",
-            "toc",
-            "codehilite",
-        ]
+extensions = [
+    "extra",
+    "pymdownx.highlight",
+    "pymdownx.inlinehilite",
+    "pymdownx.superfences",
+    "pymdownx.tilde",
+    "pymdownx.mark",
+    "pymdownx.betterem",
+    "pymdownx.magiclink",
+    "pymdownx.keys",
+    "pymdownx.arithmatex",
+    "pymdownx.details",
+    "pymdownx.tabbed",
+    "pymdownx.critic",
+]
     )
     filtered_html = html_filter(raw_html_content)
     html_content = jinja_handler(md_file, filtered_html, config)
