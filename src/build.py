@@ -1,13 +1,22 @@
+import importlib.util
+import re
+
+from jinja2 import Environment, FileSystemLoader
+from markdown import markdown
+from markdown.extensions.attr_list import AttrListTreeprocessor
 from os import getcwd, makedirs, path, walk
 from os.path import abspath, dirname
-from markdown import markdown
-from jinja2 import Environment, FileSystemLoader
-import importlib.util
 
 from .config import find_project_from_path, load_tree_config
 from .errors import fatal, html_fatal
 from .fileops import read_file, write_file
 from .log import GRAY, info
+
+# patch [ ] instead of { }
+AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
+AttrListTreeprocessor.BLOCK_RE  = re.compile(r'\n[ ]*{}[ ]*$'.format(AttrListTreeprocessor.BASE_RE))
+AttrListTreeprocessor.HEADER_RE = re.compile(r'[ ]+{}[ ]*$'.format(AttrListTreeprocessor.BASE_RE))
+AttrListTreeprocessor.INLINE_RE = re.compile(r'^{}'.format(AttrListTreeprocessor.BASE_RE))
 
 replace_filters = [
     ("<p>{%" ,  "{%" ),
