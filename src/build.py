@@ -21,8 +21,6 @@ AttrListTreeprocessor.INLINE_RE = re.compile(r'^{}'.format(AttrListTreeprocessor
 replace_filters = [
     ("<p>{%" ,  "{%" ),
     ("%}</p>",  "%}" ),
-    ("<p>{{" ,  "{{" ),
-    ("}}</p>",  "}}" ),
 ]
 
 def load_plugins(path):
