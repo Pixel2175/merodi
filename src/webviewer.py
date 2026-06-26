@@ -15,17 +15,31 @@ current_url = ""
 
 def http_server(host, port, routes):
     class Handler(SimpleHTTPRequestHandler):
-        def translate_path(self, url_path):
+        def translate_path(self, url_path: str) -> str:
             url = routes["url_path"]
-            fs  = routes["fs_path"]
-            relpath = url_path.lstrip("/").rstrip("/")
+            fs = routes["fs_path"]
+
             if url_path.startswith(url["static"]):
-                extracted_path = path.relpath(url_path,url["static"])
-                return path.join(fs["static"], extracted_path)
-            if url_path.startswith(url["html"]):
-                extracted_path = path.relpath(url_path,url["html"])
-                return path.join(fs["html"], extracted_path)
-            return path.join(fs["html"], relpath)
+                rel = url_path.removeprefix(url["static"]).lstrip("/")
+                resolved = path.join(fs["static"], rel)
+
+            elif url_path.startswith(url["html"]):
+                rel = url_path.removeprefix(url["html"]).lstrip("/")
+                resolved = path.join(fs["html"], rel)
+
+            else:
+                rel = url_path.lstrip("/")
+                resolved = path.join(fs["html"], rel)
+
+            if not path.exists(resolved) and path.exists(resolved + ".html"):
+                resolved += ".html"
+
+            if path.isdir(resolved):
+                index = path.join(resolved, "index.html")
+                if path.exists(index):
+                    resolved = index
+
+            return resolved
 
         def send_error(self, code, message=None, explain=None):
             # html = html_fatal(code, self.path, message, explain)
