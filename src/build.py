@@ -43,7 +43,9 @@ def html_filter(html_content:str):
         for fltr in replace_filters:
             line = line.replace(*fltr)
         html.append(line)
-    return("\n".join(html))
+    result = "\n".join(html)
+    result = re.sub(r'(}}\s*)\[[^\]]*\]', r'\1', result)
+    return result
 
 def jinja_handler(file, html_content, config=None):
     try:
