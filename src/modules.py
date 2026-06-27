@@ -20,8 +20,14 @@ class Webview:
     port        : int
     html_path   : str
     static_path : str
+
+@dataclass
+class Extras:
+    highlight :str 
+
 @dataclass()
 class Config:
     project:Project
     tree:Tree
     webview:Webview
+    extras:Extras

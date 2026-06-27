@@ -51,6 +51,9 @@ host  = "{config.webview.host}"
 port  = {config.webview.port}
 html_path   = "{config.webview.html_path}"
 static_path = "{config.webview.static_path}"
+
+[extras]
+highlight = "{config.extras}"
 """
 
 def find_project_from_path(project_path: str):
@@ -100,4 +103,11 @@ def load_webview_config(project_path:str) -> Webview:
         port        = config["webview"]["port"],
         html_path   = config["webview"]["html_path"],
         static_path = config["webview"]["static_path"],
+    )
+
+def load_extras_config(project_path:str) -> Extras:
+    config_raw_content  = read_file(path.join(project_path,"config.toml"))
+    config = loads(config_raw_content) 
+    return Extras(
+        highlight = config["extras"]["highlight"],
     )
