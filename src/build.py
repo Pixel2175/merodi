@@ -72,8 +72,11 @@ def jinja_handler(file, html_content, config=None):
 
 def escape_code_blocks(md_content: str) -> str:
     def wrap(m):
-        return m.group(0).replace("{", "{{ '{' }}")
-    return re.sub(r'`+[\s\S]*?`+', wrap, md_content)
+        return "\n{% raw %}\n" + m.group(0) + "\n{% endraw %}\n"
+
+    md_content = re.sub(r'`{3}[\s\S]*?`{3}', wrap, md_content)  # fenced ```
+    md_content = re.sub(r'`[^`\n]+`', wrap, md_content)          # inline `
+    return md_content
 
 def save_html(html_content:str, html_dest:str):
     makedirs( dirname( abspath(html_dest)), exist_ok=True )
