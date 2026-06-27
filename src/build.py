@@ -1,5 +1,6 @@
-import importlib.util
 import re
+import importlib.util
+import latex2mathml.converter
 
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
@@ -47,6 +48,16 @@ def html_filter(html_content:str):
     result = re.sub(r'(}}\s*)\[[^\]]*\]', r'\1', result)
     return result
 
+def render_math(md_content: str) -> str:
+    def block(m):
+        return latex2mathml.converter.convert(m.group(1))
+    def inline(m):
+        return latex2mathml.converter.convert(m.group(1))
+    
+    md_content = re.sub(r'\$\$(.+?)\$\$', block, md_content, flags=re.DOTALL)
+    md_content = re.sub(r'\$(.+?)\$', inline, md_content)
+    return md_content
+
 def jinja_handler(file, html_content, config=None):
     try:
         env = Environment( loader=FileSystemLoader(config.templates)) if config else Environment()
@@ -66,24 +77,24 @@ def compile_md_to_html(md_file:str, html_dest:str, config =None):
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     info(f"Building {GRAY(md_file)}...")
     md_content = read_file(md_file)
+    math_rendered = render_math(md_content)
     raw_html_content = markdown(
-        md_content,
-extensions = [
-    "extra",
-    "md_in_html",
-    "pymdownx.highlight",
-    "pymdownx.inlinehilite",
-    "pymdownx.superfences",
-    "pymdownx.tilde",
-    "pymdownx.mark",
-    "pymdownx.betterem",
-    "pymdownx.magiclink",
-    "pymdownx.keys",
-    "pymdownx.arithmatex",
-    "pymdownx.details",
-    "pymdownx.tabbed",
-    "pymdownx.critic",
-]
+        math_rendered,
+        extensions = [
+            "extra",
+            "md_in_html",
+            "pymdownx.highlight",
+            "pymdownx.inlinehilite",
+            "pymdownx.superfences",
+            "pymdownx.tilde",
+            "pymdownx.mark",
+            "pymdownx.betterem",
+            "pymdownx.magiclink",
+            "pymdownx.keys",
+            "pymdownx.details",
+            "pymdownx.tabbed",
+            "pymdownx.critic",
+        ]
     )
     filtered_html = html_filter(raw_html_content)
     html_content = jinja_handler(md_file, filtered_html, config)
