@@ -90,7 +90,6 @@ def compile_md_to_html(md_file:str, html_dest:str, tree_config=None, extras_conf
             "pymdownx.tilde",
             "pymdownx.mark",
             "pymdownx.betterem",
-            "pymdownx.magiclink",
             "pymdownx.keys",
             "pymdownx.details",
             "pymdownx.tabbed",
