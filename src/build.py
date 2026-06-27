@@ -117,15 +117,15 @@ def build(building_type:str,project_path:str, file:list[str]):
         else:
             project_path = project_path if project_path else getcwd()
             find_project_from_path(project_path)
-            config  = load_tree_config(project_path)
-            md_path = config.markdown
+            tree_config  = load_tree_config(project_path)
+            md_path = tree_config.markdown
 
             for parent, _, files  in walk(md_path):
                 for filename in files:
                     md_file = path.join(parent, filename)
                     md_relpath = path.relpath(md_file,md_path)
-                    html_dest  = path.join(config.dest, md_relpath).removesuffix(".md") + ".html"
-                    compile_md_to_html(md_file, html_dest, config)
+                    html_dest  = path.join(tree_config.dest, md_relpath).removesuffix(".md") + ".html"
+                    compile_md_to_html(md_file, html_dest, tree_config)
 
     except Exception as e:
         fatal(e, f"Build failed: {e}")
