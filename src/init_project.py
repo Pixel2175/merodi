@@ -12,14 +12,6 @@ def check_not_already_initialized(file_path:str) -> None:
     if path.exists(file_path):
         raise Exception("Project already initialized: `config.toml` already exists")
 
-def create_tree_dirs (tree:Tree) -> None:
-    """ Creates parent dirs before start writing """
-    makedirs(tree.markdown , exist_ok=True)
-    makedirs(tree.static   , exist_ok=True)
-    makedirs(tree.templates, exist_ok=True)
-    makedirs(tree.dest     , exist_ok=True)
-    makedirs(path.dirname(tree.plugins) ,exist_ok=True)
-
 def write_default_content(tree:Tree) -> None:
     """ Write default content """
     md_file = path.join(tree.markdown, "index.md")

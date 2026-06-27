@@ -1,4 +1,4 @@
-from os import path
+from os import makedirs, path
 from .modules import Tree
 
 def write_file(file_path: str, file_content: str) -> None:
@@ -20,3 +20,10 @@ def resolve_tree_paths(project_dir: str, tree: Tree) -> Tree:
         plugins=path.join(project_dir, tree.plugins),
     )
 
+def create_tree_dirs (tree:Tree) -> None:
+    """ Creates parent dirs before start writing """
+    makedirs(tree.markdown , exist_ok=True)
+    makedirs(tree.static   , exist_ok=True)
+    makedirs(tree.templates, exist_ok=True)
+    makedirs(tree.dest     , exist_ok=True)
+    makedirs(path.dirname(tree.plugins) ,exist_ok=True)
