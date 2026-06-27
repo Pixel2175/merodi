@@ -18,6 +18,7 @@ class Tree:
 class Webview:
     host        : str
     port        : int
+    dev_tools   : str
     html_path   : str
     static_path : str
 

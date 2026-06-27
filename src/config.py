@@ -24,6 +24,7 @@ def init_config_struct(project_name:str) -> Config:
         webview = Webview(
             host = "localhost",
             port = 8866,
+            dev_tools = "true",
             html_path   = "/",
             static_path = "/static"
         ),
@@ -49,6 +50,7 @@ plugins   = "{config.tree.plugins}"
 [webview]
 host  = "{config.webview.host}"
 port  = {config.webview.port}
+dev_tools = {config.webview.dev_tools}
 html_path   = "{config.webview.html_path}"
 static_path = "{config.webview.static_path}"
 
@@ -101,6 +103,7 @@ def load_webview_config(project_path:str) -> Webview:
     return Webview(
         host        = config["webview"]["host"],
         port        = config["webview"]["port"],
+        dev_tools    = config["webview"]["dev_tools"],
         html_path   = config["webview"]["html_path"],
         static_path = config["webview"]["static_path"],
     )

@@ -126,7 +126,7 @@ def run(project_path):
 
         window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
         watch_files(window, tree_config, webview_config, extras_config)
-        webview.start()
+        webview.start(debug=webview_config.dev_tools in ["true",1])
 
 
     except KeyboardInterrupt:
