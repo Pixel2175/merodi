@@ -70,6 +70,11 @@ def jinja_handler(file, html_content, config=None):
     except Exception as e:
         return html_fatal(e, f"Template error in {file}")
 
+def escape_code_blocks(md_content: str) -> str:
+    def wrap(m):
+        return m.group(0).replace("{", "{{ '{' }}")
+    return re.sub(r'`+[\s\S]*?`+', wrap, md_content)
+
 def save_html(html_content:str, html_dest:str):
     makedirs( dirname( abspath(html_dest)), exist_ok=True )
     write_file( html_dest, html_content)
@@ -78,7 +83,8 @@ def compile_md_to_html(md_file:str, html_dest:str, tree_config=None, extras_conf
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     info(f"Building {GRAY(md_file)}...")
     md_content = read_file(md_file)
-    math_rendered = render_math(md_content)
+    escaped = escape_code_blocks(md_content)
+    math_rendered = render_math(escaped)
     raw_html_content = markdown(
         math_rendered,
         extensions = [
@@ -121,7 +127,7 @@ def build(building_type:str,project_path:str, file:list[str]):
                 raise ValueError("A file path must include exactly a source and a destination.")
 
             else:
-                compile_md_to_html(file[0], file[1].removesuffix(".md") + ".html", extras_config=Extras(highlight="monokai"))
+                compile_md_to_html(file[0], file[1].removesuffix(".md") + ".html")
                 return
 
         else:
