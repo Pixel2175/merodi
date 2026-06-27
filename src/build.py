@@ -12,6 +12,7 @@ from .config import find_project_from_path, load_extras_config, load_tree_config
 from .errors import fatal, html_fatal
 from .fileops import read_file, write_file
 from .log import GRAY, info
+from .modules import Extras
 
 # patch [ ] instead of { }
 AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
@@ -121,7 +122,7 @@ def build(building_type:str,project_path:str, file:list[str]):
                 raise ValueError("A file path must include exactly a source and a destination.")
 
             else:
-                compile_md_to_html(file[0], file[1].removesuffix(".md") + ".html")
+                compile_md_to_html(file[0], file[1].removesuffix(".md") + ".html", extras_config=Extras(highlight="monokai"))
                 return
 
         else:
