@@ -70,6 +70,7 @@ def compile_md_to_html(md_file:str, html_dest:str, config =None):
         md_content,
 extensions = [
     "extra",
+    "md_in_html",
     "pymdownx.highlight",
     "pymdownx.inlinehilite",
     "pymdownx.superfences",
