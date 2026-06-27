@@ -1,29 +1,12 @@
 from os import path, getcwd, makedirs
+
 from .modules import Config, Project, Tree, Webview
 from .log import *
 from .errors import fatal
 from .templates import *
 from .fileops import *
+from .config import render_config
 
-def render_config(config:Config) -> str:
-    return f"""[project]
-name        = "{config.project.name}"
-version     = "{config.project.version}"
-description = "{config.project.description}"
-
-[tree]
-markdown  = "{config.tree.markdown}"
-static    = "{config.tree.static}"
-templates = "{config.tree.templates}"
-dest      = "{config.tree.dest}"
-plugins   = "{config.tree.plugins}"
-
-[webview]
-host  = "{config.webview.host}"
-port  = {config.webview.port}
-html_path   = "{config.webview.html_path}"
-static_path = "{config.webview.static_path}"
-"""
 
 def init_config_struct(project_name:str) -> Config:
     """Build a Config with default values for a newly initialized project."""

@@ -4,8 +4,27 @@ from tomllib import loads
 
 from .fileops import read_file
 from .log import GRAY
-from .modules import Tree, Webview
+from .modules import Config, Tree, Webview
 
+def render_config(config:Config) -> str:
+    return f"""[project]
+name        = "{config.project.name}"
+version     = "{config.project.version}"
+description = "{config.project.description}"
+
+[tree]
+markdown  = "{config.tree.markdown}"
+static    = "{config.tree.static}"
+templates = "{config.tree.templates}"
+dest      = "{config.tree.dest}"
+plugins   = "{config.tree.plugins}"
+
+[webview]
+host  = "{config.webview.host}"
+port  = {config.webview.port}
+html_path   = "{config.webview.html_path}"
+static_path = "{config.webview.static_path}"
+"""
 
 def find_project_from_path(project_path: str):
     if not path.exists(project_path):
