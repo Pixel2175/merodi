@@ -53,7 +53,7 @@ html_path   = "{config.webview.html_path}"
 static_path = "{config.webview.static_path}"
 
 [extras]
-highlight = "{config.extras}"
+highlight = "{config.extras.highlight}"
 """
 
 def find_project_from_path(project_path: str):
