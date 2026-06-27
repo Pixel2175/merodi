@@ -6,7 +6,7 @@ from watchdog.events import FileSystemEventHandler
 import webview
 import time
 
-from .config import find_project_from_path, load_tree_config, load_webview_config
+from .config import find_project_from_path, load_extras_config, load_tree_config, load_webview_config
 from .errors import fatal, html_fatal
 from .build import compile_md_to_html
 from .log import info
@@ -58,7 +58,7 @@ def http_server(host, port, routes):
     server = HTTPServer((host, port), Handler)
     return server
 
-def reload(window, file, tree_config, webview_config):
+def reload(window, file, tree_config, webview_config, extras_config):
     global current_url
     try:
         md_relpath = path.relpath(file, tree_config.markdown)
@@ -66,14 +66,14 @@ def reload(window, file, tree_config, webview_config):
         if dest.endswith(".md"):
             dest = dest.removesuffix(".md") + ".html"
             current_url = path.relpath(dest, tree_config.dest)
-            compile_md_to_html(file, dest, tree_config)
+            compile_md_to_html(file, dest, tree_config, extras_config)
         info(f"Reloading: {current_url}")
         if current_url:
             window.load_url(f"http://{webview_config.host}:{webview_config.port}/{current_url}")
     except Exception as e:
         window.load_url(f"data:text/html,{html_fatal(e, f'Failed to reload {file}')}")
 
-def watch_files(window, tree_config, webview_config):
+def watch_files(window, tree_config, webview_config, extras_config):
     last_reload = {}
     class ReloadHandler(FileSystemEventHandler):
         def on_modified(self, event):
@@ -88,7 +88,7 @@ def watch_files(window, tree_config, webview_config):
             if now - last < 0.3:
                 return
             last_reload[reload_path] = now
-            reload(window, reload_path, tree_config, webview_config)
+            reload(window, reload_path, tree_config, webview_config, extras_config)
 
 
     observer = Observer()
@@ -109,6 +109,7 @@ def run(project_path):
         host = webview_config.host
         port = webview_config.port
         tree_config    = load_tree_config(project_path)
+        extras_config = load_extras_config(project_path)
         routes = {
             "url_path" : {
                 "html":   webview_config.html_path,
@@ -124,7 +125,7 @@ def run(project_path):
         Thread(target=server.serve_forever, daemon=True).start()
 
         window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
-        watch_files(window, tree_config, webview_config )
+        watch_files(window, tree_config, webview_config, extras_config)
         webview.start()
 
 

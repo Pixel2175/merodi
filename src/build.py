@@ -8,7 +8,7 @@ from markdown.extensions.attr_list import AttrListTreeprocessor
 from os import getcwd, makedirs, path, walk
 from os.path import abspath, dirname
 
-from .config import find_project_from_path, load_tree_config
+from .config import find_project_from_path, load_extras_config, load_tree_config
 from .errors import fatal, html_fatal
 from .fileops import read_file, write_file
 from .log import GRAY, info
@@ -73,7 +73,7 @@ def save_html(html_content:str, html_dest:str):
     makedirs( dirname( abspath(html_dest)), exist_ok=True )
     write_file( html_dest, html_content)
 
-def compile_md_to_html(md_file:str, html_dest:str, config =None):
+def compile_md_to_html(md_file:str, html_dest:str, tree_config=None, extras_config=None):
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     info(f"Building {GRAY(md_file)}...")
     md_content = read_file(md_file)
@@ -94,10 +94,20 @@ def compile_md_to_html(md_file:str, html_dest:str, config =None):
             "pymdownx.details",
             "pymdownx.tabbed",
             "pymdownx.critic",
-        ]
+        ],extension_configs={
+            "pymdownx.highlight": {
+                "use_pygments": True,
+                "noclasses": extras_config.highlight != "noclasses",
+                **(
+                    {}
+                    if extras_config.highlight == "noclasses"
+                    else {"pygments_style": extras_config.highlight}
+                ),
+            }
+        }
     )
     filtered_html = html_filter(raw_html_content)
-    html_content = jinja_handler(md_file, filtered_html, config)
+    html_content = jinja_handler(md_file, filtered_html, tree_config)
     save_html(html_content, html_dest)
     info(f"Done: {GRAY(html_dest)}...")
 
@@ -117,7 +127,8 @@ def build(building_type:str,project_path:str, file:list[str]):
         else:
             project_path = project_path if project_path else getcwd()
             find_project_from_path(project_path)
-            tree_config  = load_tree_config(project_path)
+            tree_config   = load_tree_config(project_path)
+            extras_config = load_extras_config(project_path)
             md_path = tree_config.markdown
 
             for parent, _, files  in walk(md_path):
@@ -125,7 +136,7 @@ def build(building_type:str,project_path:str, file:list[str]):
                     md_file = path.join(parent, filename)
                     md_relpath = path.relpath(md_file,md_path)
                     html_dest  = path.join(tree_config.dest, md_relpath).removesuffix(".md") + ".html"
-                    compile_md_to_html(md_file, html_dest, tree_config)
+                    compile_md_to_html(md_file, html_dest, tree_config, extras_config)
 
     except Exception as e:
         fatal(e, f"Build failed: {e}")
