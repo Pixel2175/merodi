@@ -71,12 +71,23 @@ def jinja_handler(file, html_content, config=None):
         return html_fatal(e, f"Template error in {file}")
 
 def escape_code_blocks(md_content: str) -> str:
-    def wrap(m):
+    def wrap_fenced(m):
         return "\n{% raw %}\n" + m.group(0) + "\n{% endraw %}\n"
 
-    md_content = re.sub(r'`{3}[\s\S]*?`{3}', wrap, md_content)  # fenced ```
-    md_content = re.sub(r'`[^`\n]+`', wrap, md_content)          # inline `
-    return md_content
+    def wrap_inline(m):
+        return "\n{% raw %}" + m.group(0) + "{% endraw %}\n"
+
+    # split on fenced blocks, process alternating parts
+    parts = re.split(r'(`{3}[\s\S]*?`{3})', md_content)
+    result = []
+    for i, part in enumerate(parts):
+        if i % 2 == 1:
+            # fenced block — wrap it, skip inline pass
+            result.append(wrap_fenced(re.match(r'`{3}[\s\S]*?`{3}', part)))
+        else:
+            # outside fenced — only apply inline escaping here
+            result.append(re.sub(r'`[^`\n]+`', wrap_inline, part))
+    return "".join(result)
 
 def save_html(html_content:str, html_dest:str):
     makedirs( dirname( abspath(html_dest)), exist_ok=True )
