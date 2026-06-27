@@ -11,7 +11,8 @@ dependencies = [
     "watchdog",
 	"PyGObject",
 	"pymdown-extensions",
-	"latex2mathml"
+	"latex2mathml",
+	"pygments",
 ]
 
 [project.scripts]
