@@ -4,7 +4,34 @@ from tomllib import loads
 
 from .fileops import read_file
 from .log import GRAY
-from .modules import Config, Tree, Webview
+from .modules import Config, Extras, Project, Tree, Webview
+
+def init_config_struct(project_name:str) -> Config:
+    """Build a Config with default values for a newly initialized project."""
+    return Config(
+        project=Project(
+            name = project_name,
+            version = "0.1.0",
+            description = "Add your description here",
+        ),
+        tree = Tree(
+            markdown  = "src/md",
+            static    = "src/static",
+            templates = "src/templates",
+            dest      = "src/dest",
+            plugins   = "src/plugins.py",
+        ),
+        webview = Webview(
+            host = "localhost",
+            port = 8866,
+            html_path   = "/",
+            static_path = "/static"
+        ),
+        extras= Extras(
+            highlight = "monokai"
+        )
+    )
+
 
 def render_config(config:Config) -> str:
     return f"""[project]

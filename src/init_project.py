@@ -5,31 +5,7 @@ from .log import *
 from .errors import fatal
 from .templates import *
 from .fileops import *
-from .config import render_config
-
-
-def init_config_struct(project_name:str) -> Config:
-    """Build a Config with default values for a newly initialized project."""
-    return Config(
-        project=Project(
-            name = project_name,
-            version = "0.1.0",
-            description = "Add your description here",
-        ),
-        tree = Tree(
-            markdown  = "src/md",
-            static    = "src/static",
-            templates = "src/templates",
-            dest      = "src/dest",
-            plugins   = "src/plugins.py",
-        ),
-        webview = Webview(
-            host = "localhost",
-            port = 8866,
-            html_path   = "/",
-            static_path = "/static"
-        ) 
-    )
+from .config import init_config_struct, render_config
 
 def check_not_already_initialized(file_path:str) -> None:
     """raise FileExistsError when config file exists"""
