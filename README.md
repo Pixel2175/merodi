@@ -7,6 +7,8 @@ Write pages in markdown, style them with Jinja2 templates, and get a ready-to-pu
 
 ```bash
 pip install .
+# or using `pipx`
+pipx install .
 ```
 
 ## Quick start
@@ -77,12 +79,10 @@ Pages are rendered with **Jinja2**. Template files live in `src/templates/`. You
 
 Functions defined in `src/plugins.py` are available as globals in your templates:
 
-{% raw %}
 ```jinja2
 {{ fetch("https://api.example.com/data", type="json") }}
 {{ read("src/data/content.txt") }}
 ```
-{% endraw %}
 
 The default `plugins.py` provides `fetch(url, type)` for HTTP requests and `read(file)` for local files. Add your own functions — any public name (no leading underscore) is automatically available.
 
