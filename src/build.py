@@ -26,7 +26,6 @@ replace_filters = [
 ]
 
 def load_plugins(path):
-    global context
     spec = importlib.util.spec_from_file_location("plugins", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
