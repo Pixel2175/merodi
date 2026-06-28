@@ -52,8 +52,11 @@ def http_server(host, port, routes):
             self.wfile.write(html.encode())
 
         def log_message(self, format, *args):
-            method, path, _ = args[0].split(" ", 2)
-            info(f"{method} {path} {args[1]}")
+            try:
+                method, path, _ = args[0].split(" ", 2)
+                info(f"{method} {path} {args[1]}")
+            except (ValueError, IndexError):
+                info(format % args)
                     
     server = HTTPServer((host, port), Handler)
     return server
