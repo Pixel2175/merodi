@@ -103,6 +103,7 @@ def watch_files(window, tree_config, webview_config, extras_config):
             recursive=True
         )
     observer.start()
+    return observer
 
 def run(project_path):
     try:
@@ -128,7 +129,7 @@ def run(project_path):
         Thread(target=server.serve_forever, daemon=True).start()
 
         window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
-        watch_files(window, tree_config, webview_config, extras_config)
+        observer = watch_files(window, tree_config, webview_config, extras_config)
         webview.start(debug=webview_config.dev_tools in ["true",1])
 
 
