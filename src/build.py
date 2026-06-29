@@ -26,15 +26,19 @@ replace_filters = [
 ]
 
 def load_plugins(path):
-    spec = importlib.util.spec_from_file_location("plugins", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    try:
+        spec = importlib.util.spec_from_file_location("plugins", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
-    return {
-        name: value
-        for name, value in vars(module).items()
-        if not name.startswith("_")
-    }
+        return {
+            name: value
+            for name, value in vars(module).items()
+            if not name.startswith("_")
+        }
+
+    except Exception as e:
+        raise RuntimeError(f"Failed loading plugin {path}: {e}") from e
 
 
 def html_filter(html_content:str):
