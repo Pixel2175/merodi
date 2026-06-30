@@ -107,16 +107,16 @@ def compile_md_to_html(md_file:str, html_dest:str, tree_config=None, extras_conf
         extensions = [
             "extra",
             "md_in_html",
+            "pymdownx.betterem",
+            "pymdownx.critic",
+            "pymdownx.details",
             "pymdownx.highlight",
             "pymdownx.inlinehilite",
-            "pymdownx.superfences",
-            "pymdownx.tilde",
-            "pymdownx.mark",
-            "pymdownx.betterem",
             "pymdownx.keys",
-            "pymdownx.details",
+            "pymdownx.mark",
+            "pymdownx.superfences",
             "pymdownx.tabbed",
-            "pymdownx.critic",
+            "pymdownx.tilde",
         ],extension_configs={
             "pymdownx.highlight": {
                 "use_pygments": True,
