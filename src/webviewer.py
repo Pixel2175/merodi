@@ -91,6 +91,7 @@ def run(project_path):
         server = http_server(host, port, routes)
         server_thread = Thread(target=server.serve_forever, daemon=True)
         server_thread.start()
+        info(f"HTTP SERVER STARTS: http://{host}:{port}")
 
         window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
         observer = watch_files(
