@@ -8,16 +8,22 @@ from .build import compile_md_to_html
 from .log import  warn
 from .errors import fatal
 
-def reload( file, tree_config, extras_config):
-    global current_url
+current_md_file = None
+
+def reload(changed_path, tree_config, extras_config):
+    global current_md_file
     try:
-        md_relpath = path.relpath(file, tree_config.markdown)
+        if changed_path.endswith(".md"):
+            current_md_file = changed_path
+        if current_md_file is None:
+            return None
+
+        md_relpath = path.relpath(current_md_file, tree_config.markdown)
         dest = path.join(tree_config.dest, md_relpath)
-        if dest.endswith(".md"):
-            dest = dest.removesuffix(".md") + ".html"
-            url = path.relpath(dest, tree_config.dest)
-            compile_md_to_html(file, dest, tree_config, extras_config)
-            return url
+        dest = dest.removesuffix(".md") + ".html"
+        url = path.relpath(dest, tree_config.dest)
+        compile_md_to_html(current_md_file, dest, tree_config, extras_config)
+        return url
     except Exception as e:
         warn(str(e))
 
@@ -38,7 +44,7 @@ def watch_files(tree_config, extra_config, reload_func:Callable | None=None):
                 return
             last_reload[reload_path] = now
             file = reload( reload_path, tree_config, extra_config)
-            if reload_func: reload_func(file)
+            if reload_func and file: reload_func(file)
 
 
 
