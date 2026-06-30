@@ -20,6 +20,9 @@ def main():
     webview_parser = sub_parser.add_parser("webview", parents=[common])
     webview_parser.add_argument("path", nargs="?")
 
+    webview_parser = sub_parser.add_parser("watch", parents=[common])
+    webview_parser.add_argument("path", nargs="?")
+
     build_parser = sub_parser.add_parser("build", parents=[common])
     build_parser.add_argument("--release", action="store_true")
     build_parser.add_argument("--debug", action="store_true")
@@ -41,3 +44,7 @@ def main():
     elif args.command == "webview":
         from .webviewer import run
         run(args.path)
+
+    elif args.command == "watch":
+        from .watcher import run_watcher
+        run_watcher(args.path)

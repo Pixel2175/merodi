@@ -9,9 +9,9 @@ import time
 from .config import find_project_from_path, load_extras_config, load_tree_config, load_webview_config
 from .errors import fatal, html_fatal
 from .build import compile_md_to_html
-from .log import info
+from .watcher import watch_files 
+from .log import die, info, warn
 
-current_url = ""
 
 def http_server(host, port, routes):
     class Handler(SimpleHTTPRequestHandler):
@@ -61,49 +61,12 @@ def http_server(host, port, routes):
     server = HTTPServer((host, port), Handler)
     return server
 
-def reload(window, file, tree_config, webview_config, extras_config):
-    global current_url
+def reload_webview(window, url, webview_config):
     try:
-        md_relpath = path.relpath(file, tree_config.markdown)
-        dest = path.join(tree_config.dest, md_relpath)
-        if dest.endswith(".md"):
-            dest = dest.removesuffix(".md") + ".html"
-            current_url = path.relpath(dest, tree_config.dest)
-            compile_md_to_html(file, dest, tree_config, extras_config)
-        info(f"Reloading: {current_url}")
-        if current_url:
-            window.load_url(f"http://{webview_config.host}:{webview_config.port}/{current_url}")
+        window.load_url(f"http://{webview_config.host}:{webview_config.port}/{url}")
     except Exception as e:
-        window.load_url(f"data:text/html,{html_fatal(e, f'Failed to reload {file}')}")
-
-def watch_files(window, tree_config, webview_config, extras_config):
-    last_reload = {}
-    class ReloadHandler(FileSystemEventHandler):
-        def on_modified(self, event):
-            reload_path = event.src_path
-            if event.is_directory :
-                if path.exists(path.join(event.src_path, "index.html")):
-                    reload_path = path.join(event.src_path, "index.html")
-                else: 
-                    return
-            now = time.time()
-            last = last_reload.get(reload_path, 0)
-            if now - last < 0.3:
-                return
-            last_reload[reload_path] = now
-            reload(window, reload_path, tree_config, webview_config, extras_config)
-
-
-    observer = Observer()
-    handler = ReloadHandler()
-    for file in [tree_config.markdown, tree_config.templates, tree_config.plugins, tree_config.static]:
-        observer.schedule(
-            handler,
-            path=file,
-            recursive=True
-        )
-    observer.start()
-    return observer
+        window.load_url(f"data:text/html,{html_fatal(e, f'Failed to reload {url}')}")
+        warn(str(e))
 
 def run(project_path):
     try:
@@ -126,10 +89,15 @@ def run(project_path):
         }
 
         server = http_server(host, port, routes)
-        Thread(target=server.serve_forever, daemon=True).start()
+        server_thread = Thread(target=server.serve_forever, daemon=True)
+        server_thread.start()
 
         window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
-        observer = watch_files(window, tree_config, webview_config, extras_config)
+        observer = watch_files(
+                tree_config, extras_config,
+                lambda path: reload_webview(window, path, webview_config),
+                )
+        observer.start()
         webview.start(debug=webview_config.dev_tools in ["true",1])
 
 
