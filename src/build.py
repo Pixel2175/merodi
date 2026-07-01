@@ -73,24 +73,17 @@ def jinja_handler(file, html_content, config=None):
     except Exception as e:
         return html_fatal(e, f"Template error in {file}")
 
-def escape_code_blocks(md_content: str) -> str:
-    def wrap_fenced(m):
-        return "\n{% raw %}\n" + m.group(0) + "\n{% endraw %}\n"
+def escape_code_blocks(html_content: str) -> str:
+    """ Neutralize '{' inside rendered <pre>/<code> blocks so Jinja never
+    reads {% %} or {{ }} out of code samples, even if a sample's text
+    literally contains Jinja syntax (e.g. docs showing `{% raw %}`).
+    &#123; renders back to '{' in the browser, so output is unaffected. """
+    def neutralize(m):
+        return m.group(0).replace("{", "&#123;")
 
-    def wrap_inline(m):
-        return "\n{% raw %}" + m.group(0) + "{% endraw %}\n"
-
-    # split on fenced blocks, process alternating parts
-    parts = re.split(r'(`{3}[\s\S]*?`{3})', md_content)
-    result = []
-    for i, part in enumerate(parts):
-        if i % 2 == 1:
-            # fenced block — wrap it, skip inline pass
-            result.append(wrap_fenced(re.match(r'`{3}[\s\S]*?`{3}', part)))
-        else:
-            # outside fenced — only apply inline escaping here
-            result.append(re.sub(r'`[^`\n]+`', wrap_inline, part))
-    return "".join(result)
+    html_content = re.sub(r'<pre\b[\s\S]*?</pre>', neutralize, html_content)
+    html_content = re.sub(r'<code\b[\s\S]*?</code>', neutralize, html_content)
+    return html_content
 
 def save_html(html_content:str, html_dest:str):
     makedirs( dirname( abspath(html_dest)), exist_ok=True )
@@ -100,8 +93,7 @@ def compile_md_to_html(md_file:str, html_dest:str, tree_config=None, extras_conf
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     info(f"Building {GRAY(md_file)}...")
     md_content = read_file(md_file)
-    escaped = escape_code_blocks(md_content)
-    math_rendered = render_math(escaped)
+    math_rendered = render_math(md_content)
     raw_html_content = markdown(
         math_rendered,
         extensions = [
@@ -129,7 +121,8 @@ def compile_md_to_html(md_file:str, html_dest:str, tree_config=None, extras_conf
             }
         }
     )
-    filtered_html = html_filter(raw_html_content)
+    escaped_html = escape_code_blocks(raw_html_content)
+    filtered_html = html_filter(escaped_html)
     html_content = jinja_handler(md_file, filtered_html, tree_config)
     save_html(html_content, html_dest)
     info(f"Done: {GRAY(html_dest)}...")
