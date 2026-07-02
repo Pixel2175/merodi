@@ -1,17 +1,35 @@
 from os import getcwd, path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from threading import Thread
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 import webview
-import time
 
 from .config import find_project_from_path, load_extras_config, load_tree_config, load_webview_config
 from .errors import fatal, html_fatal
-from .build import compile_md_to_html
 from .watcher import watch_files 
-from .log import die, info, warn
+from .log import info, warn
+import ifaddr
+import socket
 
+_ip_cache: list[str] = []
+
+import ifaddr
+
+def resolve_ips(host: str, port: int) -> list[str]:
+    global _ip_cache
+    if host != "0.0.0.0":
+        _ip_cache = [host]
+    elif not _ip_cache:
+        _ip_cache = [
+            ip_str
+            for adapter in ifaddr.get_adapters()
+            for ip in adapter.ips
+            if ip.is_IPv4
+            and (ip_str := str(ip.ip))
+            and not ip_str.startswith("127.")
+            and not ip_str.startswith("169.254.")
+        ] or ["127.0.0.1"]
+
+    return _ip_cache
 
 def http_server(host, port, routes):
     class Handler(SimpleHTTPRequestHandler):
@@ -61,15 +79,16 @@ def http_server(host, port, routes):
     server = HTTPServer((host, port), Handler)
     return server
 
-def reload_webview(window, url, webview_config):
+def reload_webview(window, url, host, port):
     try:
-        window.load_url(f"http://{webview_config.host}:{webview_config.port}/{url}")
+        window.load_url(f"http://{host}:{port}/{url}")
     except Exception as e:
         window.load_url(f"data:text/html,{html_fatal(e, f'Failed to reload {url}')}")
         warn(str(e))
 
 def run(project_path):
     try:
+        global _ip_cache
         project_path = project_path if project_path else getcwd()
         find_project_from_path(project_path)
         webview_config = load_webview_config(project_path)
@@ -91,12 +110,16 @@ def run(project_path):
         server = http_server(host, port, routes)
         server_thread = Thread(target=server.serve_forever, daemon=True)
         server_thread.start()
-        info(f"HTTP SERVER STARTS: http://{host}:{port}")
+        _ip_cache = resolve_ips(host, port)
+        info(f"HTTP SERVER STARTS ON:")
+        for ip in _ip_cache:
+            info(f"  IP: http://{ip}:{port}")
+        print()
 
-        window = webview.create_window("Merodi", url=f"http://{host}:{port}/")
+        window = webview.create_window("Merodi", url=f"http://{_ip_cache[0]}:{port}/")
         observer = watch_files(
                 tree_config, extras_config,
-                lambda path: reload_webview(window, path, webview_config),
+                lambda path: reload_webview(window, path, _ip_cache[0], port),
                 )
         observer.start()
         webview.start(debug=webview_config.dev_tools in ["true",1])
