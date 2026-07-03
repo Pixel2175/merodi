@@ -62,14 +62,14 @@ def find_project_from_path(project_path: str):
     if not path.exists(path.join(project_path, "config.toml")):
         raise Exception(f"cannot find `config.toml` in: {GRAY(project_path)}")
 
-def load_tree_config(project_path) -> Tree:
-    config_raw_content = read_file(path.join(project_path, "config.toml"))
+def load_tree_config() -> Tree:
+    config_raw_content = read_file("config.toml")
     config = loads(config_raw_content)
-    markdown  = path.join(project_path, config["tree"].get("markdown",  "src/md"))
-    static    = path.join(project_path, config["tree"].get("static",    "src/static"))
-    templates = path.join(project_path, config["tree"].get("templates", "src/templates"))
-    dest      = path.join(project_path, config["tree"].get("dest",      "src/dest"))
-    plugins   = path.join(project_path, config["tree"].get("plugins",   "src/plugins.py"))
+    markdown  = config["tree"].get("markdown",  "src/md")
+    static    = config["tree"].get("static",    "src/static")
+    templates = config["tree"].get("templates", "src/templates")
+    dest      = config["tree"].get("dest",      "src/dest")
+    plugins   = config["tree"].get("plugins",   "src/plugins.py")
 
     if not exists(markdown):
         raise FileNotFoundError(f"markdown directory does not exist: {markdown}")
@@ -90,8 +90,8 @@ def load_tree_config(project_path) -> Tree:
         plugins   = plugins,
     )
 
-def load_webview_config(project_path:str) -> Webview:
-    config_raw_content = read_file(path.join(project_path, "config.toml"))
+def load_webview_config() -> Webview:
+    config_raw_content = read_file("config.toml")
     config = loads(config_raw_content)
     return Webview(
         host        = config["webview"].get("host",        "localhost"),
@@ -101,8 +101,8 @@ def load_webview_config(project_path:str) -> Webview:
         static_path = config["webview"].get("static_path", "/static"),
     )
 
-def load_extras_config(project_path:str) -> Extras:
-    config_raw_content = read_file(path.join(project_path, "config.toml"))
+def load_extras_config() -> Extras:
+    config_raw_content = read_file("config.toml")
     config = loads(config_raw_content)
     return Extras(
         highlight = config["extras"].get("highlight", "monokai"),
