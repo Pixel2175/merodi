@@ -91,11 +91,11 @@ def run(project_path):
         global _ip_cache
         project_path = project_path if project_path else getcwd()
         find_project_from_path(project_path)
-        webview_config = load_webview_config(project_path)
+        webview_config = load_webview_config()
         host = webview_config.host
         port = webview_config.port
-        tree_config    = load_tree_config(project_path)
-        extras_config = load_extras_config(project_path)
+        tree_config    = load_tree_config()
+        extras_config = load_extras_config()
         routes = {
             "url_path" : {
                 "html":   webview_config.html_path,
