@@ -5,7 +5,7 @@ import latex2mathml.converter
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
 from markdown.extensions.attr_list import AttrListTreeprocessor
-from os import getcwd, makedirs, path, walk
+from os import chdir, getcwd, makedirs, path, walk
 from os.path import abspath, dirname
 
 from .config import find_project_from_path, load_extras_config, load_tree_config
@@ -143,8 +143,9 @@ def build(building_type:str,project_path:str, file:list[str]):
         else:
             project_path = project_path if project_path else getcwd()
             find_project_from_path(project_path)
-            tree_config   = load_tree_config(project_path)
-            extras_config = load_extras_config(project_path)
+            chdir(project_path)
+            tree_config   = load_tree_config()
+            extras_config = load_extras_config()
             md_path = tree_config.markdown
 
             for parent, _, files  in walk(md_path):

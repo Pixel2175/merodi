@@ -1,4 +1,4 @@
-from os import  getcwd, path
+from os import  chdir, getcwd, path
 from typing import Callable
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -62,8 +62,9 @@ def run_watcher(project_path):
     try:
         project_path = project_path if project_path else getcwd()
         find_project_from_path(project_path)
-        extra_config = load_extras_config(project_path)
-        tree_config  = load_tree_config(project_path)
+        chdir(project_path)
+        extra_config = load_extras_config()
+        tree_config  = load_tree_config()
         observers = watch_files(tree_config, extra_config)
         observers.start()
         try:
