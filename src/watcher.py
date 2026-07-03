@@ -33,9 +33,6 @@ def watch_files(tree_config, extra_config, reload_func:Callable | None=None):
         def on_modified(self, event):
             reload_path = event.src_path
             if event.is_directory :
-                if path.exists(path.join(event.src_path, "index.html")):
-                    reload_path = path.join(event.src_path, "index.html")
-                else: 
                     return
             now = time.time()
             last = last_reload.get(reload_path, 0)
@@ -44,9 +41,6 @@ def watch_files(tree_config, extra_config, reload_func:Callable | None=None):
             last_reload[reload_path] = now
             file = reload( reload_path, tree_config, extra_config)
             if reload_func and file: reload_func(file)
-
-
-
     observer = Observer()
     handler = ReloadHandler()
     for file in [tree_config.markdown, tree_config.templates, tree_config.plugins, tree_config.static]:
