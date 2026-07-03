@@ -19,11 +19,10 @@ def reload(changed_path, tree_config, extras_config):
             return None
 
         md_relpath = path.relpath(current_md_file, tree_config.markdown)
-        dest = path.join(tree_config.dest, md_relpath)
-        dest = dest.removesuffix(".md") + ".html"
-        url = path.relpath(dest, tree_config.dest)
+        html = path.splitext(md_relpath)[0] + ".html"
+        dest = path.join(tree_config.dest, html)
         compile_md_to_html(current_md_file, dest, tree_config, extras_config)
-        return url
+        return html
     except Exception as e:
         warn(str(e))
 
