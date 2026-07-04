@@ -46,7 +46,7 @@ def watch_files(reload_func:Callable | None=None):
             if reload_func and file: reload_func(file)
     observer = Observer()
     handler = ReloadHandler()
-    for file in [tree_config.markdown, tree_config.templates, tree_config.plugins, tree_config.static]:
+    for file in [config.tree.markdown, config.tree.templates, path.dirname(config.tree.plugins), config.tree.static]:
         observer.schedule(
             handler,
             path=file,
