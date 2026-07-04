@@ -26,6 +26,8 @@ replace_filters = [
 ]
 
 def load_plugins(path):
+    module_dir = dirname(abspath(path))
+    sys.path.insert(0, module_dir)
     try:
         spec = importlib.util.spec_from_file_location("plugins", path)
         module = importlib.util.module_from_spec(spec)
@@ -39,6 +41,8 @@ def load_plugins(path):
 
     except Exception as e:
         raise RuntimeError(f"Failed loading plugin {path}: {e}") from e
+    finally:
+        sys.path.pop(0)
 
 
 def html_filter(html_content:str):
