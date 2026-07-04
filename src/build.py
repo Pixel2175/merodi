@@ -13,7 +13,6 @@ from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
 from .fileops import read_file, write_file
 from .log import GRAY, info
-from .modules import Extras
 
 # patch [ ] instead of { }
 AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
