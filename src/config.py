@@ -62,9 +62,14 @@ def find_project_from_path(project_path: str):
     if not path.exists(path.join(project_path, "config.toml")):
         raise Exception(f"cannot find `config.toml` in: {GRAY(project_path)}")
 
-def load_tree_config() -> Tree:
-    config_raw_content = read_file("config.toml")
-    config = loads(config_raw_content)
+def load_project_config(config) -> Project:
+    return Project(
+        name        = config["project"].get("name", "project"),
+        version     = config["project"].get("version", "0.1.0"),
+        description = config["project"].get("description", "Add your description here"),
+    ) 
+
+def load_tree_config(config) -> Tree:
     markdown  = config["tree"].get("markdown",  "src/md")
     static    = config["tree"].get("static",    "src/static")
     templates = config["tree"].get("templates", "src/templates")
@@ -90,9 +95,7 @@ def load_tree_config() -> Tree:
         plugins   = plugins,
     )
 
-def load_webview_config() -> Webview:
-    config_raw_content = read_file("config.toml")
-    config = loads(config_raw_content)
+def load_webview_config(config) -> Webview:
     return Webview(
         host        = config["webview"].get("host",        "localhost"),
         port        = config["webview"].get("port",        8866),
@@ -101,9 +104,18 @@ def load_webview_config() -> Webview:
         static_path = config["webview"].get("static_path", "/static"),
     )
 
-def load_extras_config() -> Extras:
-    config_raw_content = read_file("config.toml")
-    config = loads(config_raw_content)
+def load_extras_config(config) -> Extras:
     return Extras(
         highlight = config["extras"].get("highlight", "monokai"),
     )
+
+def load_config() -> Config:
+    config_raw_content = read_file("config.toml")
+    config = loads(config_raw_content)
+    return Config(
+        project = load_project_config(config),
+        tree    = load_tree_config(config),
+        webview = load_webview_config(config),
+        extras  = load_extras_config(config),
+    )
+
