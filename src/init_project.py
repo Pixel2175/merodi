@@ -1,11 +1,61 @@
 from os import path, getcwd, makedirs
 
-from .modules import Config, Project, Tree, Webview
+from .modules import Config, Project, Tree, Webview, Extras
 from .log import *
 from .errors import fatal
 from .templates import *
 from .fileops import *
-from .config import init_config_struct, render_config
+
+def init_config_struct(project_name:str) -> Config:
+    """Build a Config with default values for a newly initialized project."""
+    return Config(
+        project=Project(
+            name        = project_name,
+            version     = "0.1.0",
+            description = "Add your description here",
+        ),
+        tree = Tree(
+            markdown  = "src/md",
+            static    = "src/static",
+            templates = "src/templates",
+            dest      = "src/dest",
+            plugins   = "src/plugins.py",
+        ),
+        webview = Webview(
+            host        = "localhost",
+            port        = 8866,
+            dev_tools   = False,
+            html_path   = "/",
+            static_path = "/static"
+        ),
+        extras = Extras(
+            highlight = "monokai"
+        )
+    )
+
+def render_config(config:Config) -> str:
+    return f"""[project]
+name        = "{config.project.name}"
+version     = "{config.project.version}"
+description = "{config.project.description}"
+
+[tree]
+markdown  = "{config.tree.markdown}"
+static    = "{config.tree.static}"
+templates = "{config.tree.templates}"
+dest      = "{config.tree.dest}"
+plugins   = "{config.tree.plugins}"
+
+[webview]
+host        = "{config.webview.host}"
+port        = {config.webview.port}
+dev_tools   = {str(config.webview.dev_tools).lower()}
+html_path   = "{config.webview.html_path}"
+static_path = "{config.webview.static_path}"
+
+[extras]
+highlight = "{config.extras.highlight}"
+"""
 
 def check_not_already_initialized(file_path:str) -> None:
     """raise FileExistsError when config file exists"""
