@@ -1,9 +1,11 @@
-from os import getcwd, path
+from os import chdir, getcwd, path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from threading import Thread
 import webview
 
-from .config import find_project_from_path, load_extras_config, load_tree_config, load_webview_config
+from src import settings
+
+from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
 from .watcher import watch_files 
 from .log import info, warn
@@ -91,19 +93,19 @@ def run(project_path):
         global _ip_cache
         project_path = project_path if project_path else getcwd()
         find_project_from_path(project_path)
-        webview_config = load_webview_config()
-        host = webview_config.host
-        port = webview_config.port
-        tree_config    = load_tree_config()
-        extras_config = load_extras_config()
+        chdir(project_path)
+        settings.CONFIG = load_config()
+        config = settings.CONFIG
+        host = config.webview.host
+        port = config.webview.port
         routes = {
             "url_path" : {
-                "html":   webview_config.html_path,
-                "static": webview_config.static_path
+                "html":   config.webview.html_path,
+                "static": config.webview.static_path,
             },
             "fs_path"  : {
-                "html":   tree_config.dest,
-                "static": tree_config.static
+                "html":   config.tree.dest,
+                "static": config.tree.static,
             },
         }
 
@@ -118,11 +120,10 @@ def run(project_path):
 
         window = webview.create_window("Merodi", url=f"http://{_ip_cache[0]}:{port}/")
         observer = watch_files(
-                tree_config, extras_config,
                 lambda path: reload_webview(window, path, _ip_cache[0], port),
                 )
         observer.start()
-        webview.start(debug=webview_config.dev_tools in ["true",1])
+        webview.start(debug=config.webview.dev_tools in ["true",1])
 
 
     except KeyboardInterrupt:

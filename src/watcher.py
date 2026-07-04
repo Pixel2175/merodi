@@ -3,7 +3,9 @@ from typing import Callable
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
-from .config import find_project_from_path, load_extras_config, load_tree_config 
+
+from src import settings
+from .config import find_project_from_path, load_config
 from .build import compile_md_to_html
 from .log import  warn
 from .errors import fatal
@@ -21,13 +23,14 @@ def reload(changed_path, tree_config, extras_config):
         md_relpath = path.relpath(current_md_file, tree_config.markdown)
         html = path.splitext(md_relpath)[0] + ".html"
         dest = path.join(tree_config.dest, html)
-        compile_md_to_html(current_md_file, dest, tree_config, extras_config)
+        compile_md_to_html(current_md_file, dest)
         return html
     except Exception as e:
         warn(str(e))
 
-def watch_files(tree_config, extra_config, reload_func:Callable | None=None):
+def watch_files(reload_func:Callable | None=None):
     last_reload = {}
+    config = settings.CONFIG
     
     class ReloadHandler(FileSystemEventHandler):
         def on_modified(self, event):
@@ -39,7 +42,7 @@ def watch_files(tree_config, extra_config, reload_func:Callable | None=None):
             if now - last < 0.3:
                 return
             last_reload[reload_path] = now
-            file = reload( reload_path, tree_config, extra_config)
+            file = reload( reload_path, config.tree , config.extras)
             if reload_func and file: reload_func(file)
     observer = Observer()
     handler = ReloadHandler()
@@ -56,9 +59,8 @@ def run_watcher(project_path):
         project_path = project_path if project_path else getcwd()
         find_project_from_path(project_path)
         chdir(project_path)
-        extra_config = load_extras_config()
-        tree_config  = load_tree_config()
-        observers = watch_files(tree_config, extra_config)
+        settings.CONFIG = load_config()
+        observers = watch_files()
         observers.start()
         try:
             while True:
