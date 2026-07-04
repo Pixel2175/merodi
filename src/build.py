@@ -29,8 +29,13 @@ def load_plugins(path):
     module_dir = dirname(abspath(path))
     sys.path.insert(0, module_dir)
     try:
+        for name in list(sys.modules):
+            mod_file = getattr(sys.modules[name], "__file__", "") or ""
+            if mod_file.startswith(module_dir):
+                del sys.modules[name]
         spec = importlib.util.spec_from_file_location("plugins", path)
         module = importlib.util.module_from_spec(spec)
+        module.CONFIG = settings.CONFIG
         spec.loader.exec_module(module)
 
         return {
