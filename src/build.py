@@ -6,7 +6,7 @@ from . import settings
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
 from markdown.extensions.attr_list import AttrListTreeprocessor
-from os import chdir, getcwd, makedirs, path, walk
+from os import chdir, getcwd, makedirs, path, walk, readlink
 from os.path import abspath, dirname
 
 from .config import find_project_from_path, load_config
@@ -173,7 +173,8 @@ def build(building_type:str,project_path:str, file:list[str]):
                     md_file = path.join(parent, filename)
                     md_relpath = path.relpath(md_file,md_path)
                     html_dest  = path.join(config.tree.dest, md_relpath).removesuffix(".md") + ".html"
-                    compile_md_to_html(md_file, html_dest)
+                    source_file = readlink(md_file) if path.islink(md_file) else md_file
+                    compile_md_to_html(source_file, html_dest)
 
     except Exception as e:
         fatal(e, f"Build failed: {e}")
