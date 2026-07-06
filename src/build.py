@@ -1,6 +1,8 @@
 import re, sys
 import importlib.util
 import latex2mathml.converter
+
+from src.hash import handle_hash_sync
 from . import settings
 
 from jinja2 import Environment, FileSystemLoader
@@ -109,6 +111,9 @@ def compile_md_to_html(md_file:str, html_dest:str ):
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
 
     info(f"Building {GRAY(md_file)}...")
+    hash = handle_hash_sync(md_file)
+    if hash is None:
+        return None 
     md_content = read_file(md_file)
     math_rendered = render_math(md_content)
     highlight = "noclasses"
@@ -146,6 +151,7 @@ def compile_md_to_html(md_file:str, html_dest:str ):
     html_content = jinja_handler(md_file, filtered_html)
     save_html(html_content, html_dest)
     info(f"Done: {GRAY(html_dest)}...")
+    return True
 
 def build(building_type:str,project_path:str, file:list[str]):
     try:

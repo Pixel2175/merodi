@@ -12,7 +12,7 @@ from .errors import fatal
 
 current_md_file = None
 
-def reload(changed_path, tree_config, extras_config):
+def reload(changed_path, tree_config):
     global current_md_file
     try:
         if changed_path.endswith(".md"):
@@ -23,7 +23,9 @@ def reload(changed_path, tree_config, extras_config):
         md_relpath = path.relpath(current_md_file, tree_config.markdown)
         html = path.splitext(md_relpath)[0] + ".html"
         dest = path.join(tree_config.dest, html)
-        compile_md_to_html(current_md_file, dest)
+        compile_status = compile_md_to_html(current_md_file, dest)
+        if compile_status is None:
+            return None
         return html
     except Exception as e:
         warn(str(e))
@@ -42,7 +44,7 @@ def watch_files(reload_func:Callable | None=None):
             if now - last < 0.3:
                 return
             last_reload[reload_path] = now
-            file = reload( reload_path, config.tree , config.extras)
+            file = reload( reload_path, config.tree)
             if reload_func and file: reload_func(file)
     observer = Observer()
     handler = ReloadHandler()

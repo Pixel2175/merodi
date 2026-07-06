@@ -1,6 +1,6 @@
 from os import path, getcwd, makedirs
 
-from .modules import Config, Project, Tree, Webview, Extras
+from .modules import Cache, Config, Project, Tree, Webview, Extras
 from .log import *
 from .errors import fatal
 from .templates import *
@@ -30,6 +30,9 @@ def init_config_struct(project_name:str) -> Config:
         ),
         extras = Extras(
             highlight = "monokai"
+        ),
+        cache = Cache(
+            hash = ".hash.cache"
         )
     )
 
@@ -55,6 +58,9 @@ static_path = "{config.webview.static_path}"
 
 [extras]
 highlight = "{config.extras.highlight}"
+
+[cache]
+hash = "{config.cache.hash}"
 """
 
 def check_not_already_initialized(file_path:str) -> None:

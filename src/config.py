@@ -3,7 +3,7 @@ from os.path import exists
 from tomllib import loads
 from .fileops import read_file
 from .log import GRAY
-from .modules import Config, Extras, Project, Tree, Webview
+from .modules import Cache, Config, Extras, Project, Tree, Webview
 
 
 def find_project_from_path(project_path: str):
@@ -59,6 +59,11 @@ def load_extras_config(config) -> Extras:
         highlight = config["extras"].get("highlight", "monokai"),
     )
 
+def load_cache_config(config) -> Cache:
+    return Cache(
+        hash = config["cache"].get("hash", ".hash.cache"),
+    )
+
 def load_config() -> Config:
     config_raw_content = read_file("config.toml")
     config = loads(config_raw_content)
@@ -67,5 +72,6 @@ def load_config() -> Config:
         tree    = load_tree_config(config),
         webview = load_webview_config(config),
         extras  = load_extras_config(config),
+        cache   = load_cache_config(config),
     )
 

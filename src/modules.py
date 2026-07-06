@@ -26,9 +26,14 @@ class Webview:
 class Extras:
     highlight :str 
 
+@dataclass
+class Cache:
+    hash :str 
+
 @dataclass()
 class Config:
     project:Project
     tree:Tree
     webview:Webview
     extras:Extras
+    cache:Cache
