@@ -19,7 +19,7 @@ def init_config_struct(project_name:str) -> Config:
             static    = "src/static",
             templates = "src/templates",
             dest      = "src/dest",
-            plugins   = "src/plugins.py",
+            plugins   = "src/plugins",
         ),
         webview = Webview(
             host        = "localhost",
@@ -79,7 +79,8 @@ def write_default_content(tree:Tree) -> None:
     css_file = path.join(tree.static, "style.css")
     write_file(css_file,CSS_CONTENT )
 
-    write_file(tree.plugins,PLUGINS_CONTENT )
+    plugins_file = path.join(tree.plugins, "main.py")
+    write_file(plugins_file,PLUGINS_CONTENT )
 
 def write_config_file(project_path, config_content):
     makedirs(project_path, exist_ok=True)

@@ -29,4 +29,4 @@ def create_tree_dirs (tree:Tree) -> None:
     makedirs(tree.static   , exist_ok=True)
     makedirs(tree.templates, exist_ok=True)
     makedirs(tree.dest     , exist_ok=True)
-    makedirs(path.dirname(tree.plugins) ,exist_ok=True)
+    makedirs(tree.plugins  , exist_ok=True)
