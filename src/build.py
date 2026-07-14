@@ -3,18 +3,16 @@ import importlib.util
 import latex2mathml.converter
 
 from src.hash import handle_hash_sync
-from . import settings
 
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
 from markdown.extensions.attr_list import AttrListTreeprocessor
 from os import chdir, getcwd, makedirs, path, walk, readlink
-from os.path import abspath, dirname
 
 from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
-from .fileops import read_file, write_file
-from .log import GRAY, info
+from .fileops import is_dotfile, read_file, write_file
+from .log import GRAY, die, info, warn
 
 # patch [ ] instead of { }
 AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
@@ -27,17 +25,24 @@ replace_filters = [
     ("%}</p>",  "%}" ),
 ]
 
-def load_plugins(path):
-    module_dir = dirname(abspath(path))
+def load_plugins(config):
+    module_dir = path.abspath(config.tree.plugins)
     sys.path.insert(0, module_dir)
     try:
+        if not path.exists(path.join(module_dir, "main.py") ):
+            die("can not find `main.py` on plugins directory")
         for name in list(sys.modules):
             mod_file = getattr(sys.modules[name], "__file__", "") or ""
             if mod_file.startswith(module_dir):
                 del sys.modules[name]
-        spec = importlib.util.spec_from_file_location("plugins", path)
+        spec = importlib.util.spec_from_file_location("plugins", path.join(module_dir, "main.py") )
+        if spec is None or spec.loader is None:
+            raise RuntimeError("Failed to create plugin module spec.")
         module = importlib.util.module_from_spec(spec)
-        module.CONFIG = settings.CONFIG
+        module.CONFIG = config
+        module.compile_page = compile_page
+        module.info = info
+        module.GRAY = GRAY
         spec.loader.exec_module(module)
 
         return {
@@ -47,7 +52,7 @@ def load_plugins(path):
         }
 
     except Exception as e:
-        raise RuntimeError(f"Failed loading plugin {path}: {e}") from e
+        raise RuntimeError(f"Failed loading plugin {config.tree.plugins}: {e}") from e
     finally:
         sys.path.pop(0)
 
@@ -73,9 +78,9 @@ def render_math(md_content: str) -> str:
     md_content = re.sub(r'\$(.+?)\$', inline, md_content)
     return md_content
 
-def jinja_handler(file, html_content):
+def jinja_handler(config, html_content, plugins=None):
     try:
-        tree = settings.CONFIG.tree if settings.CONFIG else None
+        tree = config.tree if config else None
         env = (
             Environment(loader=FileSystemLoader(tree.templates))
             if tree is not None
@@ -83,13 +88,13 @@ def jinja_handler(file, html_content):
         )
         template = env.from_string(html_content)
         return (
-            template.render(**load_plugins(tree.plugins))
-            if tree is not None
+            template.render(**plugins)
+            if plugins is not None
             else template.render()
         )
 
     except Exception as e:
-        return html_fatal(e, f"Template error in {file}")
+        return html_fatal(e, f"Template error")
 
 def escape_code_blocks(html_content: str) -> str:
     """ Neutralize '{' inside rendered <pre>/<code> blocks so Jinja never
@@ -108,21 +113,26 @@ def escape_code_blocks(html_content: str) -> str:
     return html_content
 
 def save_html(html_content:str, html_dest:str):
-    makedirs( dirname( abspath(html_dest)), exist_ok=True )
+    makedirs(path.dirname(html_dest), exist_ok=True )
     write_file( html_dest, html_content)
 
-def compile_md_to_html(md_file:str, html_dest:str ):
-    """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
-
-    info(f"Building {GRAY(md_file)}...")
-    hash = handle_hash_sync(md_file)
-    if hash is None:
-        return None 
-    md_content = read_file(md_file)
-    math_rendered = render_math(md_content)
+def process_highlighting(config):
     highlight = "noclasses"
-    if settings.CONFIG:
-        highlight = settings.CONFIG.extras.highlight
+    if config:
+        highlight = config.extras.highlight
+    return {
+        "use_pygments": True,
+        "noclasses": highlight != "noclasses",
+        **(
+            {}
+            if highlight == "noclasses"
+            else {"pygments_style": highlight}
+        ),
+    }
+
+def md_to_html(config, md_content:str):
+    """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
+    math_rendered = render_math(md_content) 
     raw_html_content = markdown(
         math_rendered,
         extensions = [
@@ -139,52 +149,67 @@ def compile_md_to_html(md_file:str, html_dest:str ):
             "pymdownx.tabbed",
             "pymdownx.tilde",
         ],extension_configs={
-            "pymdownx.highlight": {
-                "use_pygments": True,
-                "noclasses": highlight != "noclasses",
-                **(
-                    {}
-                    if highlight == "noclasses"
-                    else {"pygments_style": highlight}
-                ),
-            }
+            "pymdownx.highlight": process_highlighting(config)
         }
     )
     escaped_html = escape_code_blocks(raw_html_content)
     filtered_html = html_filter(escaped_html)
-    html_content = jinja_handler(md_file, filtered_html)
-    save_html(html_content, html_dest)
-    info(f"Done: {GRAY(html_dest)}...")
-    return True
+    return filtered_html
+
+
+def compile_page(md_content:str, html_dest:str | None=None, config=None, plugins=None):
+    html_raw = md_to_html(config, md_content)
+    html_content = jinja_handler(config, html_raw, plugins)
+    if html_dest is None:
+        return html_content
+    else:
+        save_html(html_content, html_dest)
+        return True
+
+def compile_file(md_file, html_dest, config=None, plugins=None, force:bool = False):
+    md_content = read_file(md_file)
+    if config and not force:
+        hash = handle_hash_sync(config, md_file)
+        if  hash is None and path.exists(html_dest):
+            info(f"Skipping {GRAY(md_file)}...")
+            return None 
+
+    info(f"Building {GRAY(md_file)}...")
+    return compile_page(md_content, html_dest, config, plugins)
+
+def walk_and_build(config, plugins):
+    md_path = config.tree.markdown
+    for parent, _, files  in walk(md_path):
+        for filename in files:
+            md_file = path.join(parent, filename)
+            md_relpath = path.relpath(md_file,md_path)
+            if is_dotfile(md_relpath): continue
+            html_dest = path.join(config.tree.dest, md_relpath)
+            if html_dest.endswith(".md"):
+                html_dest  = html_dest.removesuffix(".md") + ".html"
+            source_file = readlink(md_file) if path.islink(md_file) else md_file
+            compile_file(source_file, html_dest, config, plugins)
+
+def build_if_file(project_path, file):
+    if project_path:
+        raise ValueError("Please specify either a project path or a file path, not both.")
+    elif len(file) != 2:
+        raise ValueError("A file path must include exactly a source and a destination.")
+    else:
+        compile_file(file[0], file[1])
 
 def build(building_type:str,project_path:str, file:list[str]):
     try:
         if file:
-            if project_path:
-                raise ValueError("Please specify either a project path or a file path, not both.")
- 
-            elif len(file) != 2:
-                raise ValueError("A file path must include exactly a source and a destination.")
-
-            else:
-                compile_md_to_html(file[0], file[1].removesuffix(".md") + ".html")
-                return
-
+            build_if_file(project_path, file)
         else:
             project_path = project_path if project_path else getcwd()
             find_project_from_path(project_path)
             chdir(project_path)
-            settings.CONFIG = load_config()
-            config = settings.CONFIG
-            md_path = config.tree.markdown
+            config = load_config()
+            plugins = load_plugins(config)
+            walk_and_build(config, plugins)
 
-            for parent, _, files  in walk(md_path):
-                for filename in files:
-                    md_file = path.join(parent, filename)
-                    md_relpath = path.relpath(md_file,md_path)
-                    html_dest  = path.join(config.tree.dest, md_relpath).removesuffix(".md") + ".html"
-                    source_file = readlink(md_file) if path.islink(md_file) else md_file
-                    compile_md_to_html(source_file, html_dest)
 
     except Exception as e:
         fatal(e, f"Build failed: {e}")
