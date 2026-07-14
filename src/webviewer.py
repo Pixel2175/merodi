@@ -4,6 +4,7 @@ from threading import Thread
 import webview
 
 from src import settings
+from src.build import load_plugins
 
 from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
@@ -74,7 +75,7 @@ def http_server(host, port, routes):
         def log_message(self, format, *args):
             try:
                 method, path, _ = args[0].split(" ", 2)
-                info(f"{method} {path} {args[1]}")
+                info(f"{method} {path} {args[1]}", title="HTTP")
             except (ValueError, IndexError):
                 info(format % args)
                     
@@ -94,8 +95,7 @@ def run(project_path):
         project_path = project_path if project_path else getcwd()
         find_project_from_path(project_path)
         chdir(project_path)
-        settings.CONFIG = load_config()
-        config = settings.CONFIG
+        config = load_config()
         host = config.webview.host
         port = config.webview.port
         routes = {
@@ -120,6 +120,7 @@ def run(project_path):
 
         window = webview.create_window("Merodi", url=f"http://{_ip_cache[0]}:{port}/")
         observer = watch_files(
+                config,
                 lambda path: reload_webview(window, path, _ip_cache[0], port),
                 )
         observer.start()
