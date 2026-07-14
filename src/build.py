@@ -97,7 +97,11 @@ def escape_code_blocks(html_content: str) -> str:
     literally contains Jinja syntax (e.g. docs showing `{% raw %}`).
     &#123; renders back to '{' in the browser, so output is unaffected. """
     def neutralize(m):
-        return m.group(0).replace("{", "&#123;")
+        block = m.group(0)
+        block = block.replace("${", "__JINJA_OPEN__")
+        block = block.replace("{", "&#123;")
+        block = block.replace("__JINJA_OPEN__", "{")
+        return block
 
     html_content = re.sub(r'<pre\b[\s\S]*?</pre>', neutralize, html_content)
     html_content = re.sub(r'<code\b[\s\S]*?</code>', neutralize, html_content)
