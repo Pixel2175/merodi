@@ -1,5 +1,8 @@
-from os import makedirs, path
+from os import makedirs, path, sep
 from .modules import Tree
+
+def is_dotfile(file_path):
+    return any(part.startswith(".") for part in path.normpath(file_path).split(sep))
 
 def write_file(file_path: str, file_content: str) -> None:
     with open(file_path, "w") as f:
