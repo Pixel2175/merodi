@@ -1,7 +1,7 @@
 from . import settings
 
-def info(message: str):
-    print(f"{BLUE('[INFO]:')} {message}")
+def info(message: str, title="INFO"):
+    print(f"{BLUE(f'[{title}]:')} {message}")
 
 def warn(message: str):
     print(f"{YELLOW('[WARN]:')} {message}")
