@@ -3,24 +3,23 @@ import json
 from os import path
 
 from src.fileops import read_file, write_file
-from src.log import info, warn
-from . import settings
+from src.log import warn
 
 HASH_FILE_CONTENT: dict | None = None
 
 
-def read_hash_file():
+def read_hash_file(config):
     global HASH_FILE_CONTENT
     if HASH_FILE_CONTENT is None:
-        with open(settings.CONFIG.cache.hash, "r") as f:
+        with open(config.cache.hash, "r") as f:
             HASH_FILE_CONTENT = json.load(f)
 
     return
 
 
-def write_hash_file():
+def write_hash_file(config):
     global HASH_FILE_CONTENT
-    with open(settings.CONFIG.cache.hash, "w") as f:
+    with open(config.cache.hash, "w") as f:
         json.dump(HASH_FILE_CONTENT, f)
 
 def md5_handler(md_path):
@@ -41,30 +40,29 @@ def append_md5(key, value):
     HASH_FILE_CONTENT[key] = value
 
 
-def handle_hash_sync(md_path):
+def handle_hash_sync(config, md_path):
     global HASH_FILE_CONTENT
     try:
-        hash_dir = settings.CONFIG.cache.hash
-        if settings.CONFIG is None:
+        hash_dir = config.cache.hash
+        if config is None:
             return
         if not (path.exists(hash_dir) and path.isfile(hash_dir)):
             write_file(hash_dir, "{}")
 
-        read_hash_file()
+        read_hash_file(config)
 
         if HASH_FILE_CONTENT is None:
             HASH_FILE_CONTENT = {}
 
         current_hash = md5_handler(md_path)
-        md_rel_path = path.relpath(md_path, settings.CONFIG.tree.markdown)
+        md_rel_path = path.relpath(md_path, config.tree.markdown)
         new_hash = hash_is_modified(md_rel_path, current_hash)
 
         if new_hash is None:
             return None
 
-        info(f"File hash: {new_hash}")
         append_md5(md_rel_path, new_hash)
-        write_hash_file()
+        write_hash_file(config)
         return True
 
     except Exception as e:
