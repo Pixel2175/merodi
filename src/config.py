@@ -4,6 +4,7 @@ from tomllib import loads
 from .fileops import read_file
 from .log import GRAY
 from .modules import Cache, Config, Extras, Project, Tree, Webview
+from .hooks import hook_call
 
 
 def find_project_from_path(project_path: str):
@@ -66,12 +67,14 @@ def load_cache_config(config) -> Cache:
 
 def load_config() -> Config:
     config_raw_content = read_file("config.toml")
-    config = loads(config_raw_content)
-    return Config(
-        project = load_project_config(config),
-        tree    = load_tree_config(config),
-        webview = load_webview_config(config),
-        extras  = load_extras_config(config),
-        cache   = load_cache_config(config),
+    config_loaded = loads(config_raw_content)
+    config = Config(
+        project = load_project_config(config_loaded),
+        tree    = load_tree_config(config_loaded),
+        webview = load_webview_config(config_loaded),
+        extras  = load_extras_config(config_loaded),
+        cache   = load_cache_config(config_loaded),
     )
+    config = hook_call("on_config_load", config) or config
+    return config
 

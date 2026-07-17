@@ -4,6 +4,8 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
 
+from src.hooks import hook_call
+
 from .config import find_project_from_path, load_config
 from .build import compile_file, load_plugins
 from .log import warn
@@ -27,6 +29,7 @@ def reload(changed_path, config, plugins, force=None):
             return None
         return html
     except Exception as e:
+        hook_call("on_reload_error", e)
         warn(str(e))
 
 def watch_files(config, reload_func:Callable | None=None):
@@ -49,6 +52,7 @@ def watch_files(config, reload_func:Callable | None=None):
             if now - last < 0.3:
                 return
             last_reload[reload_path] = now
+            hook_call("on_file_changed", reload_path, config)
             file = reload( reload_path, config, plugins, force=force)
             if reload_func and file: reload_func(file)
     observer = Observer()
@@ -59,6 +63,7 @@ def watch_files(config, reload_func:Callable | None=None):
             path=file,
             recursive=True
         )
+    hook_call("on_watch_start", config)
     return observer
 
 def run_watcher(project_path):
@@ -74,6 +79,7 @@ def run_watcher(project_path):
                 time.sleep(1)
         except KeyboardInterrupt:
             observers.stop()
+            hook_call("on_watch_stop", config)
         observers.join()
 
     except Exception as e:

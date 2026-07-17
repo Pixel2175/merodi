@@ -2,7 +2,8 @@ import re, sys
 import importlib.util
 import latex2mathml.converter
 
-from src.hash import handle_hash_sync
+from .hooks import hook, hook_call, hooks
+from .hash import handle_hash_sync
 
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
@@ -13,6 +14,7 @@ from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
 from .fileops import is_dotfile, read_file, write_file
 from .log import GRAY, die, info, warn
+from . import log
 
 # patch [ ] instead of { }
 AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
@@ -26,6 +28,8 @@ replace_filters = [
 ]
 
 def load_plugins(config):
+    for k in hooks:
+        hooks[k] = None
     module_dir = path.abspath(config.tree.plugins)
     sys.path.insert(0, module_dir)
     try:
@@ -41,15 +45,17 @@ def load_plugins(config):
         module = importlib.util.module_from_spec(spec)
         module.CONFIG = config
         module.compile_page = compile_page
-        module.info = info
-        module.GRAY = GRAY
+        module.hook = hook
+        module.log = log
         spec.loader.exec_module(module)
 
-        return {
+        exports =  {
             name: value
             for name, value in vars(module).items()
             if not name.startswith("_")
         }
+        hook_call("on_plugins_loaded",exports)
+        return exports
 
     except Exception as e:
         raise RuntimeError(f"Failed loading plugin {config.tree.plugins}: {e}") from e
@@ -69,31 +75,32 @@ def html_filter(html_content:str):
     return result
 
 def render_math(md_content: str) -> str:
-    def block(m):
-        return latex2mathml.converter.convert(m.group(1))
-    def inline(m):
+    def convert(m):
         return latex2mathml.converter.convert(m.group(1))
     
-    md_content = re.sub(r'\$\$(.+?)\$\$', block, md_content, flags=re.DOTALL)
-    md_content = re.sub(r'\$(.+?)\$', inline, md_content)
+    md_content = re.sub(r'\$\$(.+?)\$\$', convert, md_content, flags=re.DOTALL)
+    md_content = re.sub(r'\$(.+?)\$', convert, md_content)
+
     return md_content
 
 def jinja_handler(config, html_content, plugins=None):
     try:
         tree = config.tree if config else None
-        env = (
-            Environment(loader=FileSystemLoader(tree.templates))
-            if tree is not None
-            else Environment()
-        )
+        if tree:
+            templates = tree.templates 
+            templates = hook_call("on_jinja_template_dir", templates) or templates
+            env = ( Environment(loader=FileSystemLoader(templates)) )
+
+        else:
+            env = ( Environment() )
+
         template = env.from_string(html_content)
-        return (
-            template.render(**plugins)
-            if plugins is not None
-            else template.render()
-        )
+        result =  template.render(**plugins) if plugins is not None else template.render()
+        result = hook_call("on_jinja_template_renderer", result) or result
+        return result
 
     except Exception as e:
+        hook_call("on_jinja_error", e)
         return html_fatal(e, f"Template error")
 
 def escape_code_blocks(html_content: str) -> str:
@@ -115,11 +122,13 @@ def escape_code_blocks(html_content: str) -> str:
 def save_html(html_content:str, html_dest:str):
     makedirs(path.dirname(html_dest), exist_ok=True )
     write_file( html_dest, html_content)
+    hook_call("on_page_written", html_dest, html_content)
 
 def process_highlighting(config):
     highlight = "noclasses"
     if config:
         highlight = config.extras.highlight
+    highlight = hook_call("on_highlight_config", highlight) or highlight
     return {
         "use_pygments": True,
         "noclasses": highlight != "noclasses",
@@ -133,6 +142,7 @@ def process_highlighting(config):
 def md_to_html(config, md_content:str):
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     math_rendered = render_math(md_content) 
+    math_rendered = hook_call("on_math_renderer", math_rendered) or math_rendered
     raw_html_content = markdown(
         math_rendered,
         extensions = [
@@ -152,14 +162,18 @@ def md_to_html(config, md_content:str):
             "pymdownx.highlight": process_highlighting(config)
         }
     )
+    raw_html_content = hook_call("on_md_to_html", raw_html_content) or raw_html_content
     escaped_html = escape_code_blocks(raw_html_content)
+    escaped_html = hook_call("on_escape_code", escaped_html) or escaped_html
     filtered_html = html_filter(escaped_html)
+    filtered_html = hook_call("on_html_filter", filtered_html) or filtered_html
     return filtered_html
 
 
 def compile_page(md_content:str, html_dest:str | None=None, config=None, plugins=None):
     html_raw = md_to_html(config, md_content)
     html_content = jinja_handler(config, html_raw, plugins)
+    html_content = hook_call("on_page_rendered", html_content) or html_content
     if html_dest is None:
         return html_content
     else:
@@ -168,6 +182,7 @@ def compile_page(md_content:str, html_dest:str | None=None, config=None, plugins
 
 def compile_file(md_file, html_dest, config=None, plugins=None, force:bool = False):
     md_content = read_file(md_file)
+    md_content = hook_call("on_page_read", md_file, md_content) or md_content
     if config and not force:
         hash = handle_hash_sync(config, md_file)
         if  hash is None and path.exists(html_dest):
@@ -179,9 +194,11 @@ def compile_file(md_file, html_dest, config=None, plugins=None, force:bool = Fal
 
 def walk_and_build(config, plugins):
     md_path = config.tree.markdown
+    hook_call("on_walk_start", config)
     for parent, _, files  in walk(md_path):
         for filename in files:
             md_file = path.join(parent, filename)
+            hook_call("on_walk_file", md_file)
             md_relpath = path.relpath(md_file,md_path)
             if is_dotfile(md_relpath): continue
             html_dest = path.join(config.tree.dest, md_relpath)
@@ -189,6 +206,7 @@ def walk_and_build(config, plugins):
                 html_dest  = html_dest.removesuffix(".md") + ".html"
             source_file = readlink(md_file) if path.islink(md_file) else md_file
             compile_file(source_file, html_dest, config, plugins)
+    hook_call("on_walk_end", config)
 
 def build_if_file(project_path, file):
     if project_path:
@@ -208,7 +226,9 @@ def build(building_type:str,project_path:str, file:list[str]):
             chdir(project_path)
             config = load_config()
             plugins = load_plugins(config)
+            hook_call("on_build_start", config)
             walk_and_build(config, plugins)
+            hook_call("on_build_end", config)
 
 
     except Exception as e:

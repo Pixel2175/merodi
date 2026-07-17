@@ -3,6 +3,7 @@ import json
 from os import path
 
 from src.fileops import read_file, write_file
+from src.hooks import hook_call
 from src.log import warn
 
 HASH_FILE_CONTENT: dict | None = None
@@ -56,6 +57,7 @@ def handle_hash_sync(config, md_path):
 
         current_hash = md5_handler(md_path)
         md_rel_path = path.relpath(md_path, config.tree.markdown)
+        hook_call("on_hash_check", md_rel_path, current_hash)
         new_hash = hash_is_modified(md_rel_path, current_hash)
 
         if new_hash is None:
@@ -63,6 +65,7 @@ def handle_hash_sync(config, md_path):
 
         append_md5(md_rel_path, new_hash)
         write_hash_file(config)
+        hook_call("on_hash_written", md_rel_path, new_hash)
         return True
 
     except Exception as e:
