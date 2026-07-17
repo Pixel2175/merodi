@@ -6,6 +6,7 @@ hooks = {
     "on_config_load"            : None,
     "on_escape_code"            : None,
     "on_file_changed"           : None,
+    "on_page_skip"              : None,
     "on_hash_check"             : None,
     "on_hash_written"           : None,
     "on_highlight_config"       : None,

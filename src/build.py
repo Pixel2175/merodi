@@ -186,6 +186,7 @@ def compile_file(md_file, html_dest, config=None, plugins=None, force:bool = Fal
     if config and not force:
         hash = handle_hash_sync(config, md_file)
         if  hash is None and path.exists(html_dest):
+            hook_call("on_page_skip", md_file)
             info(f"Skipping {GRAY(md_file)}...")
             return None 
 
