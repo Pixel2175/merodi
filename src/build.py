@@ -50,6 +50,7 @@ def load_plugins(config):
         module.api = api
         module.hook = hook
         spec.loader.exec_module(module)
+        hook_call("on_plugins_before_export", config)
 
         exports =  {
             name: value
