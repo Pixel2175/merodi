@@ -120,6 +120,8 @@ def process_highlighting(config):
     highlight = hook_call("on_highlight_config", highlight) or highlight
     return {
         "use_pygments": True,
+        "linenums": True,
+        "linenums_style": "table",
         "noclasses": highlight != "noclasses",
         **(
             {}
