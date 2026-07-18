@@ -103,22 +103,6 @@ def jinja_handler(config, html_content, plugins=None):
         hook_call("on_jinja_error", e)
         return html_fatal(e, f"Template error")
 
-def escape_code_blocks(html_content: str) -> str:
-    """ Neutralize '{' inside rendered <pre>/<code> blocks so Jinja never
-    reads {% %} or {{ }} out of code samples, even if a sample's text
-    literally contains Jinja syntax (e.g. docs showing `{% raw %}`).
-    &#123; renders back to '{' in the browser, so output is unaffected. """
-    def neutralize(m):
-        block = m.group(0)
-        block = block.replace("${", "__JINJA_OPEN__")
-        block = block.replace("{", "&#123;")
-        block = block.replace("__JINJA_OPEN__", "{")
-        return block
-
-    html_content = re.sub(r'<pre\b[\s\S]*?</pre>', neutralize, html_content)
-    html_content = re.sub(r'<code\b[\s\S]*?</code>', neutralize, html_content)
-    return html_content
-
 def save_html(html_content:str, html_dest:str):
     makedirs(path.dirname(html_dest), exist_ok=True )
     write_file( html_dest, html_content)
@@ -163,9 +147,7 @@ def md_to_html(config, md_content:str):
         }
     )
     raw_html_content = hook_call("on_md_to_html", raw_html_content) or raw_html_content
-    escaped_html = escape_code_blocks(raw_html_content)
-    escaped_html = hook_call("on_escape_code", escaped_html) or escaped_html
-    filtered_html = html_filter(escaped_html)
+    filtered_html = html_filter(raw_html_content)
     filtered_html = hook_call("on_html_filter", filtered_html) or filtered_html
     return filtered_html
 

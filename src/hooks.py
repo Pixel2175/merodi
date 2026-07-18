@@ -4,7 +4,6 @@ hooks = {
     "on_build_end"              : None,
     "on_build_start"            : None,
     "on_config_load"            : None,
-    "on_escape_code"            : None,
     "on_file_changed"           : None,
     "on_page_skip"              : None,
     "on_hash_check"             : None,
