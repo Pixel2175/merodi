@@ -5,6 +5,7 @@ from .fileops import read_file
 from .log import GRAY
 from .modules import Cache, Config, Extras, Project, Tree, Webview
 from .hooks import hook_call
+from .api import api
 
 
 def find_project_from_path(project_path: str):
@@ -76,5 +77,6 @@ def load_config() -> Config:
         cache   = load_cache_config(config_loaded),
     )
     config = hook_call("on_config_load", config) or config
-    return config
+    api.config = config
 
+    return config
