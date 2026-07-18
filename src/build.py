@@ -4,6 +4,7 @@ import latex2mathml.converter
 
 from .hooks import hook, hook_call, hooks
 from .hash import handle_hash_sync
+from .api import expose, api 
 
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
@@ -13,8 +14,10 @@ from os import chdir, getcwd, makedirs, path, walk, readlink
 from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
 from .fileops import is_dotfile, read_file, write_file
-from .log import GRAY, die, info, warn
+from .log import GRAY, die, info
 from . import log
+
+api.log = log
 
 # patch [ ] instead of { }
 AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
@@ -43,10 +46,9 @@ def load_plugins(config):
         if spec is None or spec.loader is None:
             raise RuntimeError("Failed to create plugin module spec.")
         module = importlib.util.module_from_spec(spec)
-        module.CONFIG = config
-        module.compile_page = compile_page
+
+        module.api = api
         module.hook = hook
-        module.log = log
         spec.loader.exec_module(module)
 
         exports =  {
@@ -63,6 +65,7 @@ def load_plugins(config):
         sys.path.pop(0)
 
 
+@expose("html_filter")
 def html_filter(html_content:str):
     """ filter jinja placeholders from html """
     html = []
@@ -83,6 +86,7 @@ def render_math(md_content: str) -> str:
 
     return md_content
 
+@expose("jinja_handler")
 def jinja_handler(config, html_content, plugins=None):
     try:
         tree = config.tree if config else None
@@ -103,6 +107,7 @@ def jinja_handler(config, html_content, plugins=None):
         hook_call("on_jinja_error", e)
         return html_fatal(e, f"Template error")
 
+@expose("save_html")
 def save_html(html_content:str, html_dest:str):
     makedirs(path.dirname(html_dest), exist_ok=True )
     write_file( html_dest, html_content)
@@ -123,6 +128,7 @@ def process_highlighting(config):
         ),
     }
 
+@expose("md_to_html")
 def md_to_html(config, md_content:str):
     """Convert a Markdown file to HTML, applying filters and Jinja2 processing, and save to dest."""
     math_rendered = render_math(md_content) 
@@ -152,6 +158,7 @@ def md_to_html(config, md_content:str):
     return filtered_html
 
 
+@expose("compile_page")
 def compile_page(md_content:str, html_dest:str | None=None, config=None, plugins=None):
     html_raw = md_to_html(config, md_content)
     html_content = jinja_handler(config, html_raw, plugins)
@@ -162,6 +169,7 @@ def compile_page(md_content:str, html_dest:str | None=None, config=None, plugins
         save_html(html_content, html_dest)
         return True
 
+@expose("compile_file")
 def compile_file(md_file, html_dest, config=None, plugins=None, force:bool = False):
     md_content = read_file(md_file)
     md_content = hook_call("on_page_read", md_file, md_content) or md_content
