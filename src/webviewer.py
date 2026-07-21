@@ -8,7 +8,7 @@ from src.build import load_plugins
 
 from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
-from .watcher import watch_files 
+from .watcher import watch_files
 from .log import info, warn
 import ifaddr
 import socket
@@ -78,7 +78,7 @@ def http_server(host, port, routes):
                 info(f"{method} {path} {args[1]}", title="HTTP")
             except (ValueError, IndexError):
                 info(format % args)
-                    
+
     server = HTTPServer((host, port), Handler)
     return server
 
@@ -87,7 +87,6 @@ def reload_webview(window, url, host, port):
         window.load_url(f"http://{host}:{port}/{url}")
     except Exception as e:
         window.load_url(f"data:text/html,{html_fatal(e, f'Failed to reload {url}')}")
-        warn(str(e))
 
 def run(project_path):
     try:
@@ -99,11 +98,11 @@ def run(project_path):
         host = config.webview.host
         port = config.webview.port
         routes = {
-            "url_path" : {
+            "url_path": {
                 "html":   config.webview.html_path,
                 "static": config.webview.static_path,
             },
-            "fs_path"  : {
+            "fs_path": {
                 "html":   config.tree.dest,
                 "static": config.tree.static,
             },
@@ -124,7 +123,7 @@ def run(project_path):
                 lambda path: reload_webview(window, path, _ip_cache[0], port),
                 )
         observer.start()
-        webview.start(debug=config.webview.dev_tools in ["true",1])
+        webview.start(debug=config.webview.dev_tools in ["true", 1])
 
 
     except KeyboardInterrupt:
