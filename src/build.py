@@ -185,8 +185,8 @@ def compile_file(md_file, html_dest, config=None, plugins=None, force: bool = Fa
             return None
 
     md_content = read_md_content(md_file)
-    info(f"Building {GRAY(md_file)}...")
     result = compile_page(md_content, html_dest, config, plugins)
+    info(f"Building {GRAY(md_file)}...")
     hook_call("on_page_built", md_file, html_dest)
     return result
 

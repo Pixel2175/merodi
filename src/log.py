@@ -1,7 +1,7 @@
 from . import settings
 
-def info(message: str, title="INFO"):
-    print(f"{BLUE(f'[{title}]:')} {message}")
+def info(message: str, title="INFO", **kwarg):
+    print(f"{BLUE(f'[{title}]:')} {message}", **kwarg, flush=True)
 
 def warn(message: str):
     print(f"{YELLOW('[WARN]:')} {message}")
@@ -13,9 +13,8 @@ def die(err: str, status_code: int = 1, exit_from_code=True):
 def progress(iterable, label="Progress"):
     total = len(iterable)
     for i, item in enumerate(iterable, 1):
-        print(f"\r\033[K{BLUE(f'[{label}]:')} [{i}/{total}]", end="", flush=True)
+        print(f"{BLUE(f'[{label}]')}: [{i}/{total}]", end="\r", flush=True)
         yield item
-    print()
 
 def YELLOW(text):
     if settings.NO_COLOR: return text
