@@ -1,10 +1,12 @@
 import sys
 sys.dont_write_bytecode = True
 
+import atexit
 from argparse import ArgumentParser
 from os import environ
 from .log import *
 from . import settings
+from .hooks import hook_call
 
 def main():
     common = ArgumentParser(add_help=False)
@@ -33,6 +35,8 @@ def main():
     settings.VERBOSE  =  args.verbose  or ( environ.get("VERBOSE")  in ["true", "1"])
     settings.NO_COLOR =  args.no_color or ( environ.get("NO_COLOR") in ["true", "1"])
 
+    hook_call("on_start")
+
     if args.command == "init":
         from .init_project import init
         init(project_path = args.path)
@@ -48,3 +52,6 @@ def main():
     elif args.command == "watch":
         from .watcher import run_watcher
         run_watcher(args.path)
+
+    atexit.register(lambda: hook_call("on_end"))
+
