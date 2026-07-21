@@ -1,5 +1,4 @@
-from os import  chdir, getcwd, path
-from typing import Callable
+from os import chdir, getcwd, path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
@@ -11,20 +10,25 @@ from .build import compile_file, load_plugins
 from .log import warn
 from .errors import fatal
 
-current_md_file = None
+current_page = None
+_plugins = None
 
-def reload(changed_path, config, plugins, force=None):
-    global current_md_file
+def is_template_or_plugin(file_path, config):
+    return (file_path.startswith(config.tree.templates) or
+            file_path.startswith(config.tree.plugins))
+
+def single_file_reload(changed_path, config, force=None):
+    global current_page
     try:
         if changed_path.endswith(".md"):
-            current_md_file = changed_path
-        if current_md_file is None:
+            current_page = changed_path
+        if current_page is None:
             return None
 
-        md_relpath = path.relpath(current_md_file, config.tree.markdown)
+        md_relpath = path.relpath(current_page, config.tree.markdown)
         html = path.splitext(md_relpath)[0] + ".html"
         dest = path.join(config.tree.dest, html)
-        compile_status = compile_file(current_md_file, dest, config, plugins, force=force)
+        compile_status = compile_file(current_page, dest, config, _plugins, force=force)
         if compile_status is None:
             return None
         return html
@@ -32,29 +36,56 @@ def reload(changed_path, config, plugins, force=None):
         hook_call("on_reload_error", e)
         warn(str(e))
 
-def watch_files(config, reload_func:Callable | None=None):
+def full_reload(config, force=None):
+    global current_page, _plugins
+    try:
+        _plugins = load_plugins(config)
+        for md_file in __import__('os').walk(config.tree.markdown):
+            pass
+    except Exception as e:
+        hook_call("on_reload_error", e)
+        warn(str(e))
+
+def watch_files(config, reload_func=None):
+    global _plugins
     last_reload = {}
-    plugins = load_plugins(config)
+    _plugins = load_plugins(config)
+
     class ReloadHandler(FileSystemEventHandler):
         def on_modified(self, event):
-            nonlocal plugins
-            reload_path = event.src_path
-            force = False
-            if reload_path.startswith(config.tree.templates):
-                force = True
-            if reload_path.startswith(config.tree.plugins):
-                plugins = load_plugins(config)
-            if event.is_directory :
+            global _plugins
+            try:
+                reload_path = event.src_path
+                if event.is_directory:
+                    return
+                if reload_path.startswith(config.tree.static):
+                    if reload_func:
+                        reload_func("")
                     return
 
-            now = time.time()
-            last = last_reload.get(reload_path, 0)
-            if now - last < 0.3:
-                return
-            last_reload[reload_path] = now
-            hook_call("on_file_changed", reload_path, config)
-            file = reload( reload_path, config, plugins, force=force)
-            if reload_func and file: reload_func(file)
+                force = False
+                if reload_path.startswith(config.tree.templates):
+                    force = True
+                if reload_path.startswith(config.tree.plugins):
+                    _plugins = load_plugins(config)
+                    hook_call("on_plugin_changed", reload_path)
+                    if reload_func:
+                        reload_func("")
+                    return
+
+                now = time.time()
+                last = last_reload.get(reload_path, 0)
+                if now - last < 0.3:
+                    return
+                last_reload[reload_path] = now
+                hook_call("on_file_changed", reload_path, config)
+                file = single_file_reload(reload_path, config, force=force)
+                if reload_func and file:
+                    reload_func(file)
+            except Exception as e:
+                hook_call("on_reload_error", e)
+                warn(str(e))
+
     observer = Observer()
     handler = ReloadHandler()
     for file in [config.tree.markdown, config.tree.templates, config.tree.plugins, config.tree.static]:
