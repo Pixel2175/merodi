@@ -12,16 +12,25 @@ HASH_FILE_CONTENT: dict | None = None
 def read_hash_file(config):
     global HASH_FILE_CONTENT
     if HASH_FILE_CONTENT is None:
-        with open(config.cache.hash, "r") as f:
-            HASH_FILE_CONTENT = json.load(f)
-
-    return
+        try:
+            with open(config.cache.hash, "r") as f:
+                HASH_FILE_CONTENT = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            HASH_FILE_CONTENT = {}
 
 
 def write_hash_file(config):
     global HASH_FILE_CONTENT
-    with open(config.cache.hash, "w") as f:
-        json.dump(HASH_FILE_CONTENT, f)
+    write_file(config.cache.hash, json.dumps(HASH_FILE_CONTENT, indent=2))
+
+def clear_all_hashes():
+    global HASH_FILE_CONTENT
+    HASH_FILE_CONTENT = {}
+
+def clear_file_hash(md_path):
+    global HASH_FILE_CONTENT
+    if HASH_FILE_CONTENT is not None and md_path in HASH_FILE_CONTENT:
+        del HASH_FILE_CONTENT[md_path]
 
 def md5_handler(md_path):
     md_content = read_file(md_path)
