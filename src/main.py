@@ -14,7 +14,8 @@ def main():
     common.add_argument("--no-color", action="store_true")
 
     parser = ArgumentParser()
-    sub_parser = parser.add_subparsers(dest="command",required=True)
+    parser.add_argument("--version", action="store_true")
+    sub_parser = parser.add_subparsers(dest="command")
 
     init_parser = sub_parser.add_parser("init", parents=[common])
     init_parser.add_argument("path", nargs="?")
@@ -32,6 +33,16 @@ def main():
     build_parser.add_argument("--file", nargs=2, metavar=("SRC", "DEST"))
 
     args = parser.parse_args()
+
+    if args.version:
+        from importlib.metadata import version
+        info(version("merodi"), title="VERSION")
+        return
+
+    if args.command is None:
+        parser.print_help()
+        return
+
     settings.VERBOSE  =  args.verbose  or ( environ.get("VERBOSE")  in ["true", "1"])
     settings.NO_COLOR =  args.no_color or ( environ.get("NO_COLOR") in ["true", "1"])
 
