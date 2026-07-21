@@ -2,9 +2,9 @@ import re, sys
 import importlib.util
 import latex2mathml.converter
 
-from .hooks import hook, hook_call, hooks
-from .hash import handle_hash_sync
-from .api import expose, api 
+from .hooks import hook, hook_call, reset_hooks
+from .hash import handle_hash_sync, clear_all_hashes
+from .api import expose, api
 
 from jinja2 import Environment, FileSystemLoader
 from markdown import markdown
@@ -14,12 +14,11 @@ from os import chdir, getcwd, makedirs, path, walk, readlink
 from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
 from .fileops import is_dotfile, read_file, write_file
-from .log import GRAY, die, info
+from .log import GRAY, BLUE, die, info, warn, progress
 from . import log
 
 api.log = log
 
-# patch [ ] instead of { }
 AttrListTreeprocessor.BASE_RE   = r'\[\:?[ ]*([^\]\n ][^\n]*)[ ]*\]'
 AttrListTreeprocessor.BLOCK_RE  = re.compile(r'\n[ ]*{}[ ]*$'.format(AttrListTreeprocessor.BASE_RE))
 AttrListTreeprocessor.HEADER_RE = re.compile(r'[ ]+{}[ ]*$'.format(AttrListTreeprocessor.BASE_RE))
@@ -31,18 +30,18 @@ replace_filters = [
 ]
 
 def load_plugins(config):
-    for k in hooks:
-        hooks[k] = None
+    reset_hooks()
     module_dir = path.abspath(config.tree.plugins)
     sys.path.insert(0, module_dir)
     try:
-        if not path.exists(path.join(module_dir, "main.py") ):
+        main_path = path.join(module_dir, "main.py")
+        if not path.isfile(main_path):
             die("can not find `main.py` on plugins directory")
         for name in list(sys.modules):
             mod_file = getattr(sys.modules[name], "__file__", "") or ""
             if mod_file.startswith(module_dir):
                 del sys.modules[name]
-        spec = importlib.util.spec_from_file_location("plugins", path.join(module_dir, "main.py") )
+        spec = importlib.util.spec_from_file_location("plugins", main_path)
         if spec is None or spec.loader is None:
             raise RuntimeError("Failed to create plugin module spec.")
         module = importlib.util.module_from_spec(spec)
@@ -52,12 +51,12 @@ def load_plugins(config):
         spec.loader.exec_module(module)
         hook_call("on_plugins_before_export", config)
 
-        exports =  {
+        exports = {
             name: value
             for name, value in vars(module).items()
             if not name.startswith("_")
         }
-        hook_call("on_plugins_loaded",exports)
+        hook_call("on_plugins_loaded", exports)
         return exports
 
     except Exception as e:
