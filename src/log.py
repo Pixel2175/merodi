@@ -10,6 +10,13 @@ def die(err: str, status_code: int = 1, exit_from_code=True):
     print(f"{RED('[ERROR]:')} {err}")
     if exit_from_code: exit(status_code)
 
+def progress(iterable, label="Progress"):
+    total = len(iterable)
+    for i, item in enumerate(iterable, 1):
+        print(f"\r\033[K{BLUE(f'[{label}]:')} [{i}/{total}]", end="", flush=True)
+        yield item
+    print()
+
 def YELLOW(text):
     if settings.NO_COLOR: return text
     return f"\033[33m{text}\033[0m"
