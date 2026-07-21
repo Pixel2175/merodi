@@ -6,7 +6,7 @@ import time
 from src.hooks import hook_call
 
 from .config import find_project_from_path, load_config
-from .build import compile_file, load_plugins
+from .build import compile_file, load_plugins, build_all
 from .log import warn
 from .errors import fatal
 
@@ -17,7 +17,7 @@ def is_template_or_plugin(file_path, config):
     return (file_path.startswith(config.tree.templates) or
             file_path.startswith(config.tree.plugins))
 
-def single_file_reload(changed_path, config, force=None):
+def single_file_reload(changed_path, config):
     global current_page
     try:
         if changed_path.endswith(".md"):
@@ -28,7 +28,7 @@ def single_file_reload(changed_path, config, force=None):
         md_relpath = path.relpath(current_page, config.tree.markdown)
         html = path.splitext(md_relpath)[0] + ".html"
         dest = path.join(config.tree.dest, html)
-        compile_status = compile_file(current_page, dest, config, _plugins, force=force)
+        compile_status = compile_file(current_page, dest, config, _plugins)
         if compile_status is None:
             return None
         return html
@@ -36,12 +36,11 @@ def single_file_reload(changed_path, config, force=None):
         hook_call("on_reload_error", e)
         warn(str(e))
 
-def full_reload(config, force=None):
-    global current_page, _plugins
+def full_reload(config, plugins):
+    global current_page
     try:
-        _plugins = load_plugins(config)
-        for md_file in __import__('os').walk(config.tree.markdown):
-            pass
+        build_all(config, plugins)
+        return current_page
     except Exception as e:
         hook_call("on_reload_error", e)
         warn(str(e))
@@ -63,14 +62,13 @@ def watch_files(config, reload_func=None):
                         reload_func("")
                     return
 
-                force = False
-                if reload_path.startswith(config.tree.templates):
-                    force = True
-                if reload_path.startswith(config.tree.plugins):
-                    _plugins = load_plugins(config)
-                    hook_call("on_plugin_changed", reload_path)
-                    if reload_func:
-                        reload_func("")
+                if is_template_or_plugin(reload_path, config):
+                    if reload_path.startswith(config.tree.plugins):
+                        _plugins = load_plugins(config)
+                        hook_call("on_plugin_changed", reload_path)
+                    file = full_reload(config, _plugins)
+                    if reload_func and file:
+                        reload_func(file)
                     return
 
                 now = time.time()
@@ -79,7 +77,7 @@ def watch_files(config, reload_func=None):
                     return
                 last_reload[reload_path] = now
                 hook_call("on_file_changed", reload_path, config)
-                file = single_file_reload(reload_path, config, force=force)
+                file = single_file_reload(reload_path, config)
                 if reload_func and file:
                     reload_func(file)
             except Exception as e:

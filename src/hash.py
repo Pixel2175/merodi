@@ -23,9 +23,10 @@ def write_hash_file(config):
     global HASH_FILE_CONTENT
     write_file(config.cache.hash, json.dumps(HASH_FILE_CONTENT, indent=2))
 
-def clear_all_hashes():
+def clear_all_hashes(config):
     global HASH_FILE_CONTENT
     HASH_FILE_CONTENT = {}
+    write_hash_file(config)
 
 def clear_file_hash(md_path):
     global HASH_FILE_CONTENT

@@ -174,19 +174,9 @@ def read_md_content(md_file):
     md_content = hook_call("on_page_read", md_file, md_content) or md_content
     return md_content
 
-def should_skip_file(config, md_file, force=False):
-    if config and not force:
-        hash_result = handle_hash_sync(config, md_file)
-        if hash_result is None and path.exists(md_file.rsplit(".", 1)[0] + ".html"):
-            hook_call("on_page_skip", md_file)
-            info(f"Skipping {GRAY(md_file)}...")
-            return True
-    return False
-
 @expose("compile_file")
 def compile_file(md_file, html_dest, config=None, plugins=None, force: bool = False):
     hook_call("on_compile_start", md_file)
-    md_content = read_md_content(md_file)
     if config and not force:
         hash_result = handle_hash_sync(config, md_file)
         if hash_result is None and path.exists(html_dest):
@@ -194,6 +184,7 @@ def compile_file(md_file, html_dest, config=None, plugins=None, force: bool = Fa
             info(f"Skipping {GRAY(md_file)}...")
             return None
 
+    md_content = read_md_content(md_file)
     info(f"Building {GRAY(md_file)}...")
     result = compile_page(md_content, html_dest, config, plugins)
     hook_call("on_page_built", md_file, html_dest)
