@@ -25,18 +25,16 @@ def get_error_line(exc: Exception):
         return None
     return frame.line.strip() if frame.line else None
 
-def fatal(exc: Exception, message: str):
+def term_error(exc: Exception, message: str):
     frame = get_user_frame(exc)
     if settings.VERBOSE and frame:
         print(f"{BLUE(frame.name + '()')} {GRAY('—')} {basename(frame.filename)}:{YELLOW(str(frame.lineno))}")
         print(f"{GRAY('│')}  {frame.line}\n")
-    die(message)
+    warn(message)
 
-def html_fatal(exc: Exception, message: str) -> str:
+def web_error(exc: Exception, message: str) -> str:
     frame = get_user_frame(exc)
     source_line = get_error_line(exc)
-    warn(escape(message))
-    warn(f"{type(exc).__name__}: {exc.message if hasattr(exc, 'message') else exc}")
     line = escape(source_line) if source_line else "<i style='color:#666'>line not available</i>"
     detail = escape(str(exc.message)) if hasattr(exc, 'message') else escape(str(exc))
 
@@ -68,3 +66,10 @@ def html_fatal(exc: Exception, message: str) -> str:
         </div>
     </body>
     </html>"""
+
+def fatal(exc: Exception, message: str):
+    term_error(exc, message)
+    die(message)
+
+def html_fatal(exc: Exception, message: str) -> str:
+    return web_error(exc, message)
