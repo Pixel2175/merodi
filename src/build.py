@@ -94,6 +94,7 @@ def jinja_handler(config, html_content, plugins=None):
 
 @expose("save_html")
 def save_html(html_content, html_dest):
+    html_dest = path.abspath(html_dest)
     makedirs(path.dirname(html_dest), exist_ok=True)
     write_file(html_dest, html_content)
     hook_call("on_page_written", html_dest, html_content)
@@ -196,7 +197,11 @@ def build_if_file(project_path, file):
         raise ValueError("Specify either a project path or a file path, not both.")
     if len(file) != 2:
         raise ValueError("A file path must include exactly a source and a destination.")
-    compile_file(file[0], file[1])
+    html_dest = path.abspath(file[1])
+    if path.isdir(html_dest):
+        html_dest = path.join(html_dest,"index.html")
+
+    compile_file(file[0], html_dest, force=True)
 
 def build(mode, project_path, file, validate=False, force=False):
     try:
