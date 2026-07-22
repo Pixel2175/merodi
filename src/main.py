@@ -30,6 +30,8 @@ def main():
     build_mode = build_parser.add_mutually_exclusive_group()
     build_mode.add_argument("--draft", action="store_true", default=True)
     build_mode.add_argument("--release", action="store_true")
+    build_parser.add_argument("--validate", action="store_true")
+    build_parser.add_argument("--force", action="store_true")
     build_parser.add_argument("path", nargs="?")
     build_parser.add_argument("--file", nargs=2, metavar=("SRC", "DEST"))
 
@@ -58,7 +60,7 @@ def main():
         mode = "release" if args.release else "draft"
         api.mode = mode
         from .build import build
-        build(mode = mode, project_path = args.path, file=args.file)
+        build(mode = mode, project_path = args.path, file=args.file, validate = args.validate, force = args.force)
 
     elif args.command == "webview":
         from .webviewer import run
