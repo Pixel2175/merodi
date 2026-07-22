@@ -14,7 +14,7 @@ from os import chdir, getcwd, makedirs, path, walk, readlink
 from .config import find_project_from_path, load_config
 from .errors import fatal, html_fatal
 from .fileops import is_dotfile, read_file, write_file
-from .log import GRAY, BLUE, die, info, warn, progress
+from .log import GRAY, info, warn, progress
 from . import log
 
 api.log = log
@@ -36,7 +36,8 @@ def load_plugins(config):
     try:
         main_path = path.join(module_dir, "main.py")
         if not path.isfile(main_path):
-            die("can not find `main.py` on plugins directory")
+            warn("can not find `main.py` on plugins directory")
+            return {}
         for name in list(sys.modules):
             mod_file = getattr(sys.modules[name], "__file__", "") or ""
             if mod_file.startswith(module_dir):
@@ -51,11 +52,7 @@ def load_plugins(config):
         spec.loader.exec_module(module)
         hook_call("on_plugins_before_export", config)
 
-        exports = {
-            name: value
-            for name, value in vars(module).items()
-            if not name.startswith("_")
-        }
+        exports = {n: v for n, v in vars(module).items() if not n.startswith("_")}
         hook_call("on_plugins_loaded", exports)
         return exports
 
