@@ -218,10 +218,6 @@ def build(mode, project_path, file, validate=False, force=False):
 
         if validate:
             validate_build(config, plugins)
-        if mode == "release":
-            import shutil
-            if path.exists(dest):
-                shutil.rmtree(dest)
 
         hook_call("on_build_start", config)
         walk_and_build(config, plugins, dest, force_all=force)
