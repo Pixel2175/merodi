@@ -46,16 +46,13 @@ def load_plugins(config):
         if spec is None or spec.loader is None:
             raise RuntimeError("Failed to create plugin module spec.")
         module = importlib.util.module_from_spec(spec)
-
         module.api = api
         module.hook = hook
         spec.loader.exec_module(module)
         hook_call("on_plugins_before_export", config)
-
         exports = {n: v for n, v in vars(module).items() if not n.startswith("_")}
         hook_call("on_plugins_loaded", exports)
         return exports
-
     except Exception as e:
         raise RuntimeError(f"Failed loading plugin {config.tree.plugins}: {e}") from e
     finally:
@@ -63,7 +60,7 @@ def load_plugins(config):
 
 
 @expose("html_filter")
-def html_filter(html_content: str):
+def html_filter(html_content):
     html = []
     for line in html_content.splitlines():
         for fltr in replace_filters:
@@ -73,86 +70,62 @@ def html_filter(html_content: str):
     result = re.sub(r'(}}\s*)\[[^\]]*\]', r'\1', result)
     return result
 
-def render_math(md_content: str) -> str:
+def render_math(md_content):
     def convert(m):
         return latex2mathml.converter.convert(m.group(1))
-
     md_content = re.sub(r'\$\$(.+?)\$\$', convert, md_content, flags=re.DOTALL)
     md_content = re.sub(r'\$(.+?)\$', convert, md_content)
-
     return md_content
 
 @expose("jinja_handler")
 def jinja_handler(config, html_content, plugins=None):
     try:
-        tree = config.tree if config else None
-        if tree:
-            templates = tree.templates
-            templates = hook_call("on_jinja_template_dir", templates) or templates
-            env = (Environment(loader=FileSystemLoader(templates)))
-
+        if config:
+            templates = hook_call("on_jinja_template_dir", config.tree.templates) or config.tree.templates
+            env = Environment(loader=FileSystemLoader(templates))
         else:
-            env = (Environment())
-
+            env = Environment()
         template = env.from_string(html_content)
-        result = template.render(**plugins) if plugins is not None else template.render()
-        result = hook_call("on_jinja_template_renderer", result) or result
-        return result
-
+        result = template.render(**plugins) if plugins else template.render()
+        return hook_call("on_jinja_template_renderer", result) or result
     except Exception as e:
         hook_call("on_jinja_error", e)
         return html_fatal(e, f"Template error")
 
 @expose("save_html")
-def save_html(html_content: str, html_dest: str):
+def save_html(html_content, html_dest):
     makedirs(path.dirname(html_dest), exist_ok=True)
     write_file(html_dest, html_content)
     hook_call("on_page_written", html_dest, html_content)
 
 def process_highlighting(config):
-    highlight = "noclasses"
-    if config:
-        highlight = config.extras.highlight
+    highlight = config.extras.highlight if config else "noclasses"
     highlight = hook_call("on_highlight_config", highlight) or highlight
     return {
         "use_pygments": True,
         "linenums": True,
         "linenums_style": "table",
         "noclasses": highlight != "noclasses",
-        **(
-            {}
-            if highlight == "noclasses"
-            else {"pygments_style": highlight}
-        ),
+        **({} if highlight == "noclasses" else {"pygments_style": highlight}),
     }
 
 @expose("md_to_html")
-def md_to_html(config, md_content: str):
+def md_to_html(config, md_content):
     math_rendered = render_math(md_content)
     math_rendered = hook_call("on_math_renderer", math_rendered) or math_rendered
-    raw_html_content = markdown(
+    raw_html = markdown(
         math_rendered,
         extensions=[
-            "extra",
-            "md_in_html",
-            "pymdownx.betterem",
-            "pymdownx.critic",
-            "pymdownx.details",
-            "pymdownx.highlight",
-            "pymdownx.inlinehilite",
-            "pymdownx.keys",
-            "pymdownx.mark",
-            "pymdownx.superfences",
-            "pymdownx.tabbed",
-            "pymdownx.tilde",
-        ], extension_configs={
-            "pymdownx.highlight": process_highlighting(config)
-        }
+            "extra", "md_in_html",
+            "pymdownx.betterem", "pymdownx.critic", "pymdownx.details",
+            "pymdownx.highlight", "pymdownx.inlinehilite", "pymdownx.keys",
+            "pymdownx.mark", "pymdownx.superfences", "pymdownx.tabbed", "pymdownx.tilde",
+        ],
+        extension_configs={"pymdownx.highlight": process_highlighting(config)},
     )
-    raw_html_content = hook_call("on_md_to_html", raw_html_content) or raw_html_content
-    filtered_html = html_filter(raw_html_content)
-    filtered_html = hook_call("on_html_filter", filtered_html) or filtered_html
-    return filtered_html
+    raw_html = hook_call("on_md_to_html", raw_html) or raw_html
+    filtered = hook_call("on_html_filter", html_filter(raw_html)) or html_filter(raw_html)
+    return filtered
 
 
 @expose("compile_page")
