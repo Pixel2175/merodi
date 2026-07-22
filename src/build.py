@@ -191,6 +191,7 @@ def validate_build(config, plugins):
             warn(e)
         raise Exception(f"Validation failed with {len(errors)} error(s)")
     info("Validation passed.")
+    exit(0)
 
 def build_if_file(project_path, file):
     if project_path:
