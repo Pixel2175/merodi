@@ -27,8 +27,9 @@ def main():
     webview_parser.add_argument("path", nargs="?")
 
     build_parser = sub_parser.add_parser("build", parents=[common])
-    build_parser.add_argument("--release", action="store_true")
-    build_parser.add_argument("--debug", action="store_true")
+    build_mode = build_parser.add_mutually_exclusive_group()
+    build_mode.add_argument("--draft", action="store_true", default=True)
+    build_mode.add_argument("--release", action="store_true")
     build_parser.add_argument("path", nargs="?")
     build_parser.add_argument("--file", nargs=2, metavar=("SRC", "DEST"))
 
@@ -53,8 +54,11 @@ def main():
         init(project_path = args.path)
 
     elif args.command == "build":
+        from .api import api
+        mode = "release" if args.release else "draft"
+        api.mode = mode
         from .build import build
-        build(building_type = "release" if args.release else "debug", project_path = args.path, file=args.file)
+        build(mode = mode, project_path = args.path, file=args.file)
 
     elif args.command == "webview":
         from .webviewer import run
@@ -65,4 +69,3 @@ def main():
         run_watcher(args.path)
 
     atexit.register(lambda: hook_call("on_end"))
-

@@ -190,7 +190,7 @@ def compile_file(md_file, html_dest, config=None, plugins=None, force: bool = Fa
     hook_call("on_page_built", md_file, html_dest)
     return result
 
-def walk_and_build(config, plugins, force_all=False):
+def walk_and_build(config, plugins, dest, force_all=False):
     md_path = config.tree.markdown
     hook_call("on_walk_start", config)
     files = []
@@ -201,16 +201,35 @@ def walk_and_build(config, plugins, force_all=False):
         hook_call("on_walk_file", md_file)
         md_relpath = path.relpath(md_file, md_path)
         if is_dotfile(md_relpath): continue
-        html_dest = path.join(config.tree.dest, md_relpath)
+        html_dest = path.join(dest, md_relpath)
         if html_dest.endswith(".md"):
             html_dest = html_dest.removesuffix(".md") + ".html"
         source_file = readlink(md_file) if path.islink(md_file) else md_file
         compile_file(source_file, html_dest, config, plugins, force=force_all)
     hook_call("on_walk_end", config)
 
-def build_all(config, plugins):
+def build_all(config, plugins, dest):
     clear_all_hashes(config)
-    walk_and_build(config, plugins, force_all=True)
+    walk_and_build(config, plugins, dest, force_all=True)
+
+def validate_build(config, plugins):
+    errors = []
+    md_path = config.tree.markdown
+    for parent, _, filenames in walk(md_path):
+        for filename in filenames:
+            md_file = path.join(parent, filename)
+            if is_dotfile(path.relpath(md_file, md_path)):
+                continue
+            source = readlink(md_file) if path.islink(md_file) else md_file
+            try:
+                compile_page(read_md_content(source), config=config, plugins=plugins)
+            except Exception as e:
+                errors.append(f"{path.relpath(md_file, md_path)}: {e}")
+    if errors:
+        for e in errors:
+            warn(e)
+        raise Exception(f"Validation failed with {len(errors)} error(s)")
+    info("Validation passed.")
 
 def build_if_file(project_path, file):
     if project_path:
@@ -220,20 +239,27 @@ def build_if_file(project_path, file):
     else:
         compile_file(file[0], file[1])
 
-def build(building_type: str, project_path: str, file: list[str]):
+def build(mode, project_path, file, validate=False, force=False):
     try:
         if file:
-            build_if_file(project_path, file)
-        else:
-            project_path = project_path if project_path else getcwd()
-            find_project_from_path(project_path)
-            chdir(project_path)
-            config = load_config()
-            plugins = load_plugins(config)
-            hook_call("on_build_start", config)
-            walk_and_build(config, plugins)
-            hook_call("on_build_end", config)
+            return build_if_file(project_path, file)
 
+        project_path = project_path or getcwd()
+        find_project_from_path(project_path)
+        chdir(project_path)
+        config = load_config()
+        plugins = load_plugins(config)
+        dest = config.tree.draft_dest if mode == "draft" else config.tree.release_dest
 
+        if validate:
+            validate_build(config, plugins)
+        if mode == "release":
+            import shutil
+            if path.exists(dest):
+                shutil.rmtree(dest)
+
+        hook_call("on_build_start", config)
+        walk_and_build(config, plugins, dest, force_all=force)
+        hook_call("on_build_end", config)
     except Exception as e:
         fatal(e, f"Build failed: {e}")

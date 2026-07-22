@@ -19,7 +19,8 @@ def resolve_tree_paths(project_dir: str, tree: Tree) -> Tree:
         markdown=path.join(project_dir, tree.markdown),
         static=path.join(project_dir, tree.static),
         templates=path.join(project_dir, tree.templates),
-        dest=path.join(project_dir, tree.dest),
+        draft_dest=path.join(project_dir, tree.draft_dest),
+        release_dest=path.join(project_dir, tree.release_dest),
         plugins=path.join(project_dir, tree.plugins),
     )
 
@@ -28,5 +29,6 @@ def create_tree_dirs (tree:Tree) -> None:
     makedirs(tree.markdown , exist_ok=True)
     makedirs(tree.static   , exist_ok=True)
     makedirs(tree.templates, exist_ok=True)
-    makedirs(tree.dest     , exist_ok=True)
+    makedirs(tree.draft_dest     , exist_ok=True)
+    makedirs(tree.release_dest   , exist_ok=True)
     makedirs(tree.plugins  , exist_ok=True)

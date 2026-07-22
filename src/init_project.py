@@ -15,11 +15,12 @@ def init_config_struct(project_name:str) -> Config:
             description = "Add your description here",
         ),
         tree = Tree(
-            markdown  = "src/md",
-            static    = "src/static",
-            templates = "src/templates",
-            dest      = "src/dest",
-            plugins   = "src/plugins",
+            markdown     = "src/md",
+            static       = "src/static",
+            templates    = "src/templates",
+            draft_dest   = "build/draft",
+            release_dest = "build/release",
+            plugins      = "src/plugins",
         ),
         webview = Webview(
             host        = "localhost",
@@ -43,11 +44,12 @@ version     = "{config.project.version}"
 description = "{config.project.description}"
 
 [tree]
-markdown  = "{config.tree.markdown}"
-static    = "{config.tree.static}"
-templates = "{config.tree.templates}"
-dest      = "{config.tree.dest}"
-plugins   = "{config.tree.plugins}"
+markdown     = "{config.tree.markdown}"
+static       = "{config.tree.static}"
+templates    = "{config.tree.templates}"
+draft_dest   = "{config.tree.draft_dest}"
+release_dest = "{config.tree.release_dest}"
+plugins      = "{config.tree.plugins}"
 
 [webview]
 host        = "{config.webview.host}"

@@ -22,30 +22,14 @@ def load_project_config(config) -> Project:
     ) 
 
 def load_tree_config(config) -> Tree:
-    markdown  = config["tree"].get("markdown",  "src/md")
-    static    = config["tree"].get("static",    "src/static")
-    templates = config["tree"].get("templates", "src/templates")
-    dest      = config["tree"].get("dest",      "src/dest")
-    plugins   = config["tree"].get("plugins",   "src/plugins.py")
+    t = config["tree"]
+    markdown, static, templates = t["markdown"], t["static"], t["templates"]
+    draft_dest, release_dest, plugins = t["draft_dest"], t["release_dest"], t["plugins"]
+    for name, p in [("markdown", markdown), ("static", static), ("templates", templates), ("plugins", plugins)]:
+        if not exists(p):
+            raise FileNotFoundError(f"{name} directory does not exist: {p}")
+    return Tree(markdown=markdown, static=static, templates=templates, draft_dest=draft_dest, release_dest=release_dest, plugins=plugins)
 
-    if not exists(markdown):
-        raise FileNotFoundError(f"markdown directory does not exist: {markdown}")
-    if not exists(static):
-        raise FileNotFoundError(f"static directory does not exist: {static}")
-    if not exists(templates):
-        raise FileNotFoundError(f"templates directory does not exist: {templates}")
-    if not exists(plugins):
-        raise FileNotFoundError(f"plugins file does not exist: {plugins}")
-    if not exists(dest):
-        makedirs(dest)
-
-    return Tree(
-        markdown  = markdown,
-        static    = static,
-        templates = templates,
-        dest      = dest,
-        plugins   = plugins,
-    )
 
 def load_webview_config(config) -> Webview:
     return Webview(

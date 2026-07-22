@@ -24,6 +24,7 @@ class API:
         self.globals = GlobalStore()
         self.log = None
         self.config = None
+        self.mode = "draft"
 
 api = API()
 

@@ -1,39 +1,40 @@
 from dataclasses import dataclass
 
-@dataclass()
+@dataclass
 class Project:
-    name        : str
-    version     : str
-    description : str
+    name: str
+    version: str
+    description: str
 
-@dataclass()
+@dataclass
 class Tree:
-    markdown  : str
-    static    : str
-    templates : str
-    dest      : str
-    plugins   : str
+    markdown: str
+    static: str
+    templates: str
+    draft_dest: str
+    release_dest: str
+    plugins: str
 
-@dataclass()
+@dataclass
 class Webview:
-    host        : str
-    port        : int
-    dev_tools   : str
-    html_path   : str
-    static_path : str
+    host: str
+    port: int
+    dev_tools: str
+    html_path: str
+    static_path: str
 
 @dataclass
 class Extras:
-    highlight :str 
+    highlight: str
 
 @dataclass
 class Cache:
-    hash :str 
+    hash: str
 
-@dataclass()
+@dataclass
 class Config:
-    project:Project
-    tree:Tree
-    webview:Webview
-    extras:Extras
-    cache:Cache
+    project: Project
+    tree: Tree
+    webview: Webview
+    extras: Extras
+    cache: Cache
