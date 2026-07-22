@@ -129,33 +129,27 @@ def md_to_html(config, md_content):
 
 
 @expose("compile_page")
-def compile_page(md_content: str, html_dest: str | None = None, config=None, plugins=None):
-    html_raw = md_to_html(config, md_content)
-    html_content = jinja_handler(config, html_raw, plugins)
-    html_content = hook_call("on_page_rendered", html_content) or html_content
+def compile_page(md_content, html_dest=None, config=None, plugins=None):
+    html = jinja_handler(config, md_to_html(config, md_content), plugins)
+    html = hook_call("on_page_rendered", html) or html
     if html_dest is None:
-        return html_content
-    else:
-        save_html(html_content, html_dest)
-        return True
+        return html
+    save_html(html, html_dest)
+    return True
 
 def read_md_content(md_file):
-    md_content = read_file(md_file)
-    md_content = hook_call("on_page_read", md_file, md_content) or md_content
-    return md_content
+    content = read_file(md_file)
+    return hook_call("on_page_read", md_file, content) or content
 
 @expose("compile_file")
-def compile_file(md_file, html_dest, config=None, plugins=None, force: bool = False):
+def compile_file(md_file, html_dest, config=None, plugins=None, force=False):
     hook_call("on_compile_start", md_file)
     if config and not force:
-        hash_result = handle_hash_sync(config, md_file)
-        if hash_result is None and path.exists(html_dest):
+        if handle_hash_sync(config, md_file) is None and path.exists(html_dest):
             hook_call("on_page_skip", md_file)
             info(f"Skipping {GRAY(md_file)}...")
             return None
-
-    md_content = read_md_content(md_file)
-    result = compile_page(md_content, html_dest, config, plugins)
+    result = compile_page(read_md_content(md_file), html_dest, config, plugins)
     info(f"Building {GRAY(md_file)}...")
     hook_call("on_page_built", md_file, html_dest)
     return result
