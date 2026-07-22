@@ -103,7 +103,7 @@ def run(project_path):
                 "static": config.webview.static_path,
             },
             "fs_path": {
-                "html":   config.tree.dest,
+                "html":   config.tree.draft_dest,
                 "static": config.tree.static,
             },
         }
