@@ -157,19 +157,15 @@ def compile_file(md_file, html_dest, config=None, plugins=None, force=False):
 def walk_and_build(config, plugins, dest, force_all=False):
     md_path = config.tree.markdown
     hook_call("on_walk_start", config)
-    files = []
-    for parent, _, filenames in walk(md_path):
-        for filename in filenames:
-            files.append(path.join(parent, filename))
+    files = [path.join(p, f) for p, _, fs in walk(md_path) for f in fs]
     for md_file in progress(files, "Building"):
         hook_call("on_walk_file", md_file)
         md_relpath = path.relpath(md_file, md_path)
-        if is_dotfile(md_relpath): continue
-        html_dest = path.join(dest, md_relpath)
-        if html_dest.endswith(".md"):
-            html_dest = html_dest.removesuffix(".md") + ".html"
-        source_file = readlink(md_file) if path.islink(md_file) else md_file
-        compile_file(source_file, html_dest, config, plugins, force=force_all)
+        if is_dotfile(md_relpath):
+            continue
+        html_dest = path.join(dest, md_relpath.removesuffix(".md") + ".html")
+        source = readlink(md_file) if path.islink(md_file) else md_file
+        compile_file(source, html_dest, config, plugins, force=force_all)
     hook_call("on_walk_end", config)
 
 def build_all(config, plugins, dest):
@@ -197,11 +193,10 @@ def validate_build(config, plugins):
 
 def build_if_file(project_path, file):
     if project_path:
-        raise ValueError("Please specify either a project path or a file path, not both.")
-    elif len(file) != 2:
+        raise ValueError("Specify either a project path or a file path, not both.")
+    if len(file) != 2:
         raise ValueError("A file path must include exactly a source and a destination.")
-    else:
-        compile_file(file[0], file[1])
+    compile_file(file[0], file[1])
 
 def build(mode, project_path, file, validate=False, force=False):
     try:
