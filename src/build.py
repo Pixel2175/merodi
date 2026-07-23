@@ -215,11 +215,9 @@ def build(mode, project_path, file, validate=False, force=False):
         config = load_config()
         plugins = load_plugins(config)
         dest = config.tree.draft_dest if mode == "draft" else config.tree.release_dest
-
+        hook_call("on_build_start", config)
         if validate:
             validate_build(config, plugins)
-
-        hook_call("on_build_start", config)
         walk_and_build(config, plugins, dest, force_all=force)
         hook_call("on_build_end", config)
     except Exception as e:
