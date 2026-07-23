@@ -4,6 +4,7 @@ import traceback
 
 from .log import *
 from . import settings
+from .api import api
 
 def get_user_frame(exc):
     tb = traceback.extract_tb(exc.__traceback__)
@@ -27,14 +28,24 @@ def get_error_line(exc):
     frame = get_user_frame(exc)
     return frame.line.strip() if frame and frame.line else None
 
-def term_error(exc, message):
+def fatal(exc, message):
     frame = get_user_frame(exc)
-    if settings.VERBOSE and frame:
-        print(f"{BLUE(frame.name + '()')} {GRAY('—')} {basename(frame.filename)}:{YELLOW(str(frame.lineno))}")
-        print(f"{GRAY('│')}  {frame.line}\n")
-    warn(message)
+    source_line = get_error_line(exc)
+    detail = str(exc.message) if hasattr(exc, 'message') else str(exc)
 
-def web_error(exc, message):
+    print(f"{RED('!')} {RED(type(exc).__name__)}")
+    if frame:
+        print(f"{BLUE(frame.name + '()')} {GRAY('—')} {basename(frame.filename)}:{YELLOW(str(frame.lineno))}")
+    if detail:
+        print(f"{GRAY('│')}  {detail}")
+    if source_line:
+        print(f"{GRAY('│')}  {source_line}\n")
+    die(message)
+
+def html_fatal(exc, message):
+    if api.mode == "release":
+        fatal(exc, message)
+
     frame = get_user_frame(exc)
     source_line = get_error_line(exc)
     line = escape(source_line) if source_line else "<i style='color:#666'>line not available</i>"
@@ -68,10 +79,3 @@ def web_error(exc, message):
         </div>
     </body>
     </html>"""
-
-def fatal(exc, message):
-    term_error(exc, message)
-    die(message)
-
-def html_fatal(exc, message):
-    return web_error(exc, message)
