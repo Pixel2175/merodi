@@ -1,4 +1,4 @@
-from os import makedirs, path
+from os import path
 from os.path import exists
 from tomllib import loads
 from .fileops import read_file
@@ -36,9 +36,13 @@ def load_extras_config(c) -> Extras:
 def load_cache_config(c) -> Cache:
     return Cache(hash=c["cache"]["hash"])
 
+def load_globals_config(c):
+    api.globals._data.update(c.get("globals", {}))
+
 def load_config() -> Config:
     raw = read_file("config.toml")
     c = loads(raw)
+    load_globals_config(c)
     config = Config(
         project=load_project_config(c),
         tree=load_tree_config(c),
