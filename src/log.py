@@ -3,8 +3,8 @@ from . import settings
 def info(message: str, title="INFO", **kwarg):
     print(f"{BLUE(f'[{title}]:')} {message}", **kwarg, flush=True)
 
-def warn(message: str):
-    print(f"{YELLOW('[WARN]:')} {message}")
+def warn(message: str, title="WARN", **kwarg):
+    print(f"{YELLOW(f'[{title}]:')} {message}", **kwarg, flush=True)
 
 def die(err: str, status_code: int = 1, exit_from_code=True):
     print(f"{RED('[ERROR]:')} {err}")
