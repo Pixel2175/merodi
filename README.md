@@ -1,16 +1,16 @@
 # Merodi
 
-A markdown-based static site generator built with Python. Write pages in markdown, style them with Jinja2 templates, and get a ready-to-publish website.
+A Markdown-based static site generator built with Go. Write pages in Markdown, style them with Jinja2 templates, extend it with Lua plugins, and build a ready-to-publish website.
 
-## Install
+## Installation
 
 ```bash
-pip install .
-# or using pipx
-pipx install .
+make           # Build Merodi
+make install   # Install Merodi
+make uninstall # Remove the installed binary
 ```
 
-## Quick start
+## Quick Start
 
 ```bash
 merodi init my-site
@@ -18,16 +18,14 @@ cd my-site
 merodi build
 ```
 
-Open `src/dest/index.html`, or run `merodi webview` for a live preview.
-
 ## Basics
 
-- Pages are written in Markdown under `src/md/`
-- Templates use Jinja2 and live in `src/templates/`
-- Static assets go in `src/static/`
-- Project settings live in `config.toml`
-- Custom functions can be added in `src/plugins.py` and used directly in templates
+* Project settings are stored in `config.toml`.
+* Pages are written in Markdown and stored in the directory specified in `config.toml`.
+* See the `examples/` directory for more information.
 
 ## Status
 
-Merodi is still under active development (pre-1.0.0). Commands, config, and template behavior may change. Full documentation will be published once the project reaches **1.0.0**.
+Merodi is still under active development and is currently pre-1.0.0. Commands, configuration, and template behavior may change as the project evolves.
+
+Full documentation will be published once Merodi reaches a stable release.
