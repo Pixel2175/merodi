@@ -2,16 +2,15 @@ package compile
 
 import (
 	"bytes"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/text"
 	"merodi/src/config"
 	"merodi/src/core/state"
 	"merodi/src/utils"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/text"
 )
 
 type Compile struct {
@@ -34,10 +33,13 @@ func (self *Compile) ReadMD(mdfile string) error {
 func (self *Compile) MdToHtml(md string) error {
 	var raw_html bytes.Buffer
 	mdBytes := []byte(md)
+
 	gm := goldmark.New(
+		goldmark.WithParserOptions(self.State.Lua.ParsersOption...),
 		goldmark.WithExtensions(self.State.Lua.Extensions...),
 		goldmark.WithRendererOptions(html.WithUnsafe()),
 	)
+
 	doc := gm.Parser().Parse(text.NewReader(mdBytes))
 	doc = self.Jinja.CleanJinja(mdBytes, doc)
 	err := gm.Renderer().Render(&raw_html, mdBytes, doc)

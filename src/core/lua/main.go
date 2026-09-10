@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/parser"
 	glua "github.com/yuin/gopher-lua"
 )
 
@@ -12,11 +13,13 @@ type Lua struct {
 	Context *glua.LState
 	Config  *config.Data
 
-	Hooks      map[string]*glua.LFunction
-	Jinja      map[string]any
-	Build      *Build
-	Http       *Http
-	Extensions []goldmark.Extender
+	Hooks map[string]*glua.LFunction
+	Jinja map[string]any
+	Build *Build
+	Http  *Http
+
+	Extensions    []goldmark.Extender
+	ParsersOption []parser.Option
 
 	Merodi  *glua.LTable
 	Aborted bool
@@ -60,7 +63,8 @@ func (self *Lua) registerMerodi() {
 	self.registerJinja()
 	self.registerBuild()
 	self.registerHttp()
-	self.registerExtensions()
+	self.registerEnable()
+	self.registerDisable()
 	self.registerLog()
 	self.Context.SetGlobal("merodi", self.Merodi)
 }
