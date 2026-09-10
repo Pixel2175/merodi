@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-const VERSION = "0.5.0"
+const VERSION = "0.5.1"
 
 func main() {
 	args := os.Args[1:]
@@ -20,15 +20,15 @@ func main() {
 
 	var err error
 	switch pos {
-		case "init", "new":
-			init := Init{}
-			err = init.Run(&args)
+	case "init", "new":
+		init := Init{}
+		err = init.Run(&args)
 
-		case "version":
-			log.Info(log.Title("Version"), "Merodi %s", VERSION)
+	case "version":
+		log.Info(log.Title("Version"), "Merodi %s", VERSION)
 
-		default:
-			err = core.Run(pos, &args)
+	default:
+		err = core.Run(pos, &args)
 	}
 
 	if err != nil {
