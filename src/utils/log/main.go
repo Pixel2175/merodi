@@ -10,6 +10,23 @@ var file io.Writer = os.Stdout
 
 type Title string
 
+func format(args []any) string {
+	if len(args) == 0 {
+		return ""
+	}
+	if len(args) == 1 {
+		if s, ok := args[0].(string); ok {
+			return s
+		}
+		return fmt.Sprint(args[0])
+	}
+
+	if s, ok := args[0].(string); ok {
+		return fmt.Sprintf(s, args[1:]...)
+	}
+	return fmt.Sprint(args...)
+}
+
 func Info(args ...any) {
 	title := "INFO"
 
@@ -18,7 +35,7 @@ func Info(args ...any) {
 		args = args[1:]
 	}
 
-	msg := fmt.Sprintf(args[0].(string), args[1:]...)
+	msg := format(args)
 	fmt.Fprintf(file, "[%s]: %s\n", blue(title), msg)
 }
 
@@ -30,7 +47,7 @@ func Warn(args ...any) {
 		args = args[1:]
 	}
 
-	msg := fmt.Sprintf(args[0].(string), args[1:]...)
+	msg := format(args)
 	fmt.Fprintf(file, "[%s]: %s\n", yellow(title), msg)
 }
 
@@ -42,7 +59,7 @@ func Die(args ...any) {
 		args = args[1:]
 	}
 
-	msg := fmt.Sprintf(args[0].(string), args[1:]...)
+	msg := format(args)
 	fmt.Fprintf(file, "[%s]: %s\n", red(title), msg)
 
 	os.Exit(1)
