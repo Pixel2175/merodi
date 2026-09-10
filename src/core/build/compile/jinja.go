@@ -32,26 +32,30 @@ func (self *JinjaEngine) CleanJinja(source []byte, doc ast.Node) ast.Node {
 		next := child.NextSibling()
 		if paragraph, ok := child.(*ast.Paragraph); ok {
 			lines := paragraph.Lines()
+			hasJinja := false
 			for i := 0; i < lines.Len(); i++ {
 				segment := lines.At(i)
 				if strings.HasPrefix(strings.ReplaceAll(string(segment.Value(source)), " ", ""), "{%") {
+					hasJinja = true
+					break
+				}
+			}
+
+			if hasJinja {
+				for i := 0; i < lines.Len(); i++ {
+					segment := lines.At(i)
 					raw := ast.NewRawHTML()
 					raw.Segments.Append(segment)
 					doc.InsertBefore(doc, child, raw)
-				} else {
-					t := ast.NewText()
-					t.Segment = segment
-					p := ast.NewParagraph()
-					p.AppendChild(p, t)
-					doc.InsertBefore(doc, child, p)
 				}
+				doc.RemoveChild(doc, child)
 			}
-			doc.RemoveChild(doc, child)
 		}
 		child = next
 	}
 	return doc
 }
+
 func (self *JinjaEngine) JinjaHandler(html_content *string) error {
 	shiftedLoader, err := loaders.NewShiftedLoader("root", strings.NewReader(*html_content), self.Loader)
 	if err != nil {
