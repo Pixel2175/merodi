@@ -32,9 +32,27 @@ func (self *Lua) InitLua(cfg *config.Data) error {
 	self.Aborted = false
 
 	self.registerMerodi()
-	return self.Context.DoFile(filepath.Join(cfg.Tree.Plugins, "main.lua"))
+
+	path := filepath.Join(cfg.Tree.Plugins, "main.lua")
+	if err := self.loadFile(path); err != nil {
+		return err
+	}
+	return nil
 }
 
+func (self *Lua) loadFile(path string) error {
+	fn, err := self.Context.LoadFile(path)
+	if err != nil {
+		return describeLuaError(path, err)
+	}
+
+	self.Context.Push(fn)
+	if err := self.Context.PCall(0, glua.MultRet, nil); err != nil {
+		return describeLuaError(path, err)
+	}
+
+	return nil
+}
 func (self *Lua) registerMerodi() {
 	self.Merodi = self.Context.NewTable()
 	self.registerHooks()
