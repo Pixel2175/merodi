@@ -1,3 +1,6 @@
+-- add a directory to the file watcher
+merodi.watch.add("src")
+
 -- called when the file watcher starts
 merodi.hook("on_start_watching", function()
 	merodi.log.info("Start watching")

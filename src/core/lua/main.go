@@ -16,6 +16,7 @@ type Lua struct {
 	Hooks map[string]*glua.LFunction
 	Jinja map[string]any
 	Build *Build
+	Watch *Watcher
 	Http  *Http
 
 	Extensions    []goldmark.Extender
@@ -31,6 +32,7 @@ func (self *Lua) InitLua(cfg *config.Data) error {
 	self.Jinja = make(map[string]any)
 	self.Context = glua.NewState()
 	self.Http = &Http{}
+	self.Watch = &Watcher{}
 	self.Build = &Build{}
 	self.Aborted = false
 
@@ -63,6 +65,7 @@ func (self *Lua) registerMerodi() {
 	self.registerJinja()
 	self.registerBuild()
 	self.registerHttp()
+	self.registerWatch()
 	self.registerEnable()
 	self.registerDisable()
 	self.registerLog()

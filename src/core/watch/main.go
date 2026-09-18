@@ -1,9 +1,12 @@
 package watch
 
 import (
-	"github.com/fsnotify/fsnotify"
 	"merodi/src/core/state"
 	"merodi/src/utils"
+	"os"
+	"time"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 type Watcher struct{}
@@ -22,7 +25,18 @@ func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 	}
 	defer watcher.Close()
 
-	check(watcher.Add(state.Config.Tree.Markdown))
+	if len(state.Lua.Watch.Add) == 0 {
+		check(watcher.Add(state.Config.Tree.Markdown))
+	} else {
+		for _, file := range state.Lua.Watch.Add {
+			if _, err := os.Stat(file); os.IsNotExist(err) {
+				return err
+			} else {
+				check(watcher.Add(file))
+			}
+		}
+	}
+
 	check(state.Lua.RunHook("on_start_watching"))
 
 	lastEvents := make(map[string]time.Time)
