@@ -25,6 +25,9 @@ func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 	check(watcher.Add(state.Config.Tree.Markdown))
 	check(state.Lua.RunHook("on_start_watching"))
 
+	lastEvents := make(map[string]time.Time)
+	const debounce = 100 * time.Millisecond
+
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -32,6 +35,12 @@ func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 				return nil
 			}
 
+			now := time.Now()
+			if last, ok := lastEvents[event.Name]; ok && now.Sub(last) < debounce {
+				continue
+			}
+
+			lastEvents[event.Name] = now
 			check(state.Lua.RunHook("on_file_changed", event.Op.String(), event.Name))
 
 		case err, ok := <-watcher.Errors:
