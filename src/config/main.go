@@ -50,7 +50,7 @@ type Config struct {
 func (self *Config) DefaultData() {
 	self.Data = Data{
 		Project: Project{
-			Name:        "potato",
+			Name:        filepath.Base(self.ProjectDir),
 			Version:     "0.1.0",
 			Description: "Add your description here",
 		},
