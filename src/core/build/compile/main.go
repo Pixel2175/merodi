@@ -15,7 +15,6 @@ import (
 
 type Compile struct {
 	State *state.State
-	Mode  config.Mode
 	Jinja JinjaEngine
 }
 
@@ -62,7 +61,7 @@ func (self *Compile) resolveHTMLPath(mdPath string) (string, error) {
 		return "", err
 	}
 	destDir := self.State.Config.Tree.DraftDest
-	if self.Mode == config.Release {
+	if self.State.Lua.Build.Mode == config.Release {
 		destDir = self.State.Config.Tree.ReleaseDest
 	}
 
