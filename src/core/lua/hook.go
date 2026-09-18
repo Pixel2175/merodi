@@ -27,18 +27,25 @@ func (self *Lua) registerHooks() {
 	})
 }
 
-func (self *Lua) RunHook(stage string) (err error) {
+func (self *Lua) RunHook(stage string, args ...string) (err error) {
 	fn, ok := self.Hooks[stage]
 	if !ok {
 		return nil
 	}
 
 	self.Aborted = false
+
+	luaArgs := make([]lua.LValue, len(args))
+	for i, arg := range args {
+		luaArgs[i] = lua.LString(arg)
+	}
+
 	err = self.Context.CallByParam(lua.P{
 		Fn:      fn,
 		NRet:    0,
 		Protect: true,
-	})
+	}, luaArgs...)
+
 	if self.Aborted {
 		return utils.ErrAborted
 	}

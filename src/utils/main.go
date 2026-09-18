@@ -24,7 +24,7 @@ func Check(err error) {
 }
 
 func PrintHelp() {
-	log.Info(log.Title("Usage"), ": merodi {init,build,serve,version} <path> ...")
+	log.Info(log.Title("Usage"), ": merodi {init,watch,build,serve,version} <path> ...")
 }
 
 func Pop(args *[]string, idx int) string {
