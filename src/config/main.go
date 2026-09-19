@@ -31,15 +31,10 @@ type Tree struct {
 	ReleaseDest string `toml:"release_dest"`
 }
 
-type Http struct {
-	Host string `toml:"host"`
-	Port string `toml:"port"`
-}
 
 type Data struct {
 	Project Project `toml:"project"`
 	Tree    Tree    `toml:"tree"`
-	Http    Http    `toml:"http"`
 }
 
 type Config struct {
@@ -60,10 +55,6 @@ func (self *Config) DefaultData() {
 			Plugins:     "src/plugins",
 			DraftDest:   "build/draft",
 			ReleaseDest: "build/release",
-		},
-		Http: Http{
-			Host: "localhost",
-			Port: "8000",
 		},
 	}
 }

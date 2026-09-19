@@ -3,7 +3,6 @@ package core
 import (
 	"merodi/src/core/build"
 	"merodi/src/core/lua"
-	"merodi/src/core/serve"
 	"merodi/src/core/state"
 	"merodi/src/core/watch"
 	"merodi/src/utils"
@@ -22,7 +21,6 @@ type Action interface {
 var Actions = map[string]Action{
 	"build": &build.Build{},
 	"watch": &watch.Watcher{},
-	"serve": &serve.Serve{},
 }
 
 func Run(act string, args *[]string) (err error) {
