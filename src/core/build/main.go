@@ -6,7 +6,6 @@ import (
 	"merodi/src/core/build/compile"
 	. "merodi/src/core/state"
 	"merodi/src/utils"
-	"path/filepath"
 )
 
 type Build struct {
@@ -20,49 +19,37 @@ var (
 	check  = utils.Check
 )
 
-func (build *Build) SetBuildMode(args *[]string) {
-	if utils.PopString(args, "--release") != "" {
-		build.mode = config.Release
-		return
-	}
-
-	build.mode = config.Draft
+func (self *Build) InitCompile() {
+	self.state.Lua.Build.Mode = self.mode
+	self.compile = &compile.Compile{State: self.state}
+	check(self.compile.Init(self.mode))
 }
 
-func (build *Build) WalkAndBuild() (err error) {
-	return filepath.WalkDir(build.state.Config.Tree.Markdown, func(
-		path string,
-		entry fs.DirEntry,
-		err error,
-	) error {
-		if err != nil {
-			return err
-		}
+func (self *Build) BuildFile(path string) error {
+	html, err := self.compile.Run(path)
+	check(err)
 
-		if !entry.Type().IsRegular() && entry.Type()&fs.ModeSymlink == 0 {
-			return nil
-		}
+	_, docPath, err := self.compile.ResolveDocPaths(path)
+	check(err)
 
-		err = build.compile.Run(path)
-		if err == utils.ErrAborted {
-			return nil
-		}
-
-		return err
-	})
+	return self.writeDoc(docPath, html)
 }
 
-func (build *Build) Run(state *State, args *[]string) (err error) {
+func (self *Build) Visit(path string, entry fs.DirEntry, err error) error {
+	check(err)
+	if !self.isSource(entry) { return nil }
+	check(self.BuildFile(path))
+	return nil
+}
+
+
+func (self *Build) Run(state *State, args *[]string) (err error) {
 	defer handle(&err)
 
-	build.SetBuildMode(args)
+	self.state = state
+	self.setBuildMode(args)
 
-	build.compile = &compile.Compile{}
-	build.state = state
-	build.compile.State = build.state
-	build.state.Lua.Build.Mode = build.mode
+	self.InitCompile()
 
-	check(build.WalkAndBuild())
-
-	return nil
+	return self.walkAndBuild()
 }
