@@ -7,7 +7,7 @@ import (
 
 type Build struct {
 	MDPath   string
-	HTMLPath string
+	DocPath string
 	Content  string
 	Mode     config.Mode
 }
@@ -27,9 +27,9 @@ func (self *Lua) registerBuild() {
 		func() string { return self.Build.MDPath },
 		func(v string) { self.Build.MDPath = v },
 	))
-	dataTable.RawSetString("html_path", self.makeGetSetTable(
-		func() string { return self.Build.HTMLPath },
-		func(v string) { self.Build.HTMLPath = v },
+	dataTable.RawSetString("document_path", self.makeGetSetTable(
+		func() string { return self.Build.DocPath },
+		func(v string) { self.Build.DocPath = v },
 	))
 
 	self.Merodi.RawSetString("build", dataTable)
