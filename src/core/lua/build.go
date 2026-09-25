@@ -6,10 +6,10 @@ import (
 )
 
 type Build struct {
-	MDPath   string
+	MDPath  string
 	DocPath string
-	Content  string
-	Mode     config.Mode
+	Content string
+	Mode    config.Mode
 }
 
 func (self *Lua) registerBuild() {

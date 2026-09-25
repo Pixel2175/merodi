@@ -39,7 +39,6 @@ func (self *Compile) WriteDoc(docContent string, docPath string) error {
 	return os.WriteFile(docPath, []byte(docContent), 0o644)
 }
 
-
 func (self *Compile) ResolveDocPaths(mdFile string) (mdPath, docPath string, err error) {
 	mdPath = filepath.Join(self.State.ProjectDir, mdFile)
 	docPath, err = self.docDestPath(mdPath)

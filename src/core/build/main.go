@@ -37,11 +37,12 @@ func (self *Build) BuildFile(path string) error {
 
 func (self *Build) Visit(path string, entry fs.DirEntry, err error) error {
 	check(err)
-	if !self.isSource(entry) { return nil }
+	if !self.isSource(entry) {
+		return nil
+	}
 	check(self.BuildFile(path))
 	return nil
 }
-
 
 func (self *Build) Run(state *State, args *[]string) (err error) {
 	defer handle(&err)

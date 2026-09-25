@@ -18,15 +18,14 @@ import (
 type Markdown struct {
 	Extensions    []goldmark.Extender
 	ParsersOption []parser.Option
-	Build L.Build
-	Page *jinja.Page 
+	Build         L.Build
+	Page          *jinja.Page
 }
 
 func (self *Markdown) Init(state *State) {
 	self.Extensions = state.Lua.Extensions
 	self.ParsersOption = state.Lua.ParsersOption
 }
-
 
 func (self *Markdown) ReadMD(mdfile string) (string, error) {
 	content, err := os.ReadFile(mdfile)

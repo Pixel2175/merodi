@@ -31,7 +31,6 @@ type Tree struct {
 	ReleaseDest string `toml:"release_dest"`
 }
 
-
 type Data struct {
 	Project Project `toml:"project"`
 	Tree    Tree    `toml:"tree"`
