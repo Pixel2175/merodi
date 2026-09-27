@@ -31,6 +31,7 @@ func Run(act string, args *[]string) (err error) {
 		utils.PrintHelp()
 		return
 	}
+	self.BuildMode =  build.SetBuildMode(args)
 	check(self.GoToProjectDir(args))
 	check(self.LoadConfig())
 

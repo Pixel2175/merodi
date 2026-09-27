@@ -19,13 +19,14 @@ func (build *Build) writeDoc(path, content string) error {
 	return os.WriteFile(path, []byte(content), 0o644)
 }
 
-func (build *Build) setBuildMode(args *[]string) {
-	build.mode = config.Draft
-	if utils.PopString(args, "--release") != "" {
-		build.mode = config.Release
-	}
-}
-
 func (build *Build) walkAndBuild() error {
 	return filepath.WalkDir(build.state.Config.Tree.Markdown, build.Visit)
+}
+
+func SetBuildMode(args *[]string) config.Mode {
+	mode := config.Draft
+	if utils.PopString(args, "--release") != "" {
+		mode = config.Release
+	}
+	return mode
 }

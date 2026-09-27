@@ -48,9 +48,8 @@ func (self *Build) Run(state *State, args *[]string) (err error) {
 	defer handle(&err)
 
 	self.state = state
-	self.setBuildMode(args)
-
 	self.InitCompile()
+	self.mode = state.BuildMode
 
 	return self.walkAndBuild()
 }

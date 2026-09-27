@@ -9,7 +9,7 @@ import (
 )
 
 func (self *Compile) destRoot() string {
-	if self.Lua.Build.Mode == config.Release {
+	if self.State.BuildMode == config.Release {
 		return self.State.Config.Tree.ReleaseDest
 	}
 	return self.State.Config.Tree.DraftDest
@@ -17,17 +17,14 @@ func (self *Compile) destRoot() string {
 
 func (self *Compile) docDestPath(mdPath string) (string, error) {
 	mdRoot, err := filepath.Abs(self.State.Config.Tree.Markdown)
-	if err != nil {
-		return "", err
-	}
+	check(err)
+
 	absMd, err := filepath.Abs(mdPath)
-	if err != nil {
-		return "", err
-	}
+	check(err)
+
 	rel, err := filepath.Rel(mdRoot, absMd)
-	if err != nil {
-		return "", err
-	}
+	check(err)
+
 	name := strings.TrimSuffix(rel, ".md") + "." + "html"
 	return filepath.Abs(filepath.Join(self.destRoot(), name))
 }
