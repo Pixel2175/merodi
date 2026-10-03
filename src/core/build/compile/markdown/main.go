@@ -74,7 +74,6 @@ func (self *Markdown) wrapHTML(body string) string {
 
 	b.WriteString("</head>\n<body>\n")
 	b.WriteString(body)
-	b.WriteString("\n")
 
 	for _, s := range self.Page.Scripts {
 		b.WriteString(`<script src="` + s + `"></script>` + "\n")
