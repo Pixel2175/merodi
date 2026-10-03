@@ -10,7 +10,7 @@ import (
 )
 
 type Page struct {
-	Type, Title, Lang string
+	Title, Lang string
 	Styles, Scripts   []string
 	Metas             []Meta
 	Set               bool
@@ -57,7 +57,7 @@ func parseArgs(args *parser.Parser, allowed map[string]bool) (map[string]nodes.E
 
 func (self *JinjaEngine) fields() map[string]*string {
 	return map[string]*string{
-		"type": &self.Page.Type, "title": &self.Page.Title, "lang": &self.Page.Lang,
+		"title": &self.Page.Title, "lang": &self.Page.Lang,
 	}
 }
 
