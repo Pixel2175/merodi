@@ -14,6 +14,7 @@ import (
 )
 
 type JinjaEngine struct {
+	Title  string
 	Loader loaders.Loader
 	Config *config.Config
 	Data   map[string]any
@@ -31,7 +32,7 @@ func (self *JinjaEngine) Init(templates string) error {
 	return nil
 }
 func (self *JinjaEngine) JinjaHandler(html_content *string) error {
-	self.Page = &Page{}
+	self.Page = &Page{Title: self.Title, Lang: "en"}
 	check := utils.Check
 
 	check(self.registerDocument())

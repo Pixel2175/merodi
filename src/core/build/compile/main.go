@@ -26,7 +26,7 @@ func (self *Compile) Init(mode config.Mode) (err error) {
 
 	self.Lua = self.State.Lua
 
-	self.Jinja = JinjaEngine{}
+	self.Jinja = JinjaEngine{Title: self.State.Config.Project.Description}
 	check(self.Jinja.Init(self.State.Config.Tree.Templates))
 
 	self.MD = Markdown{}
