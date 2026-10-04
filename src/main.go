@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const VERSION = "0.5.1"
+const VERSION = "0.5.2"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
