@@ -20,7 +20,7 @@ var Actions = map[string]Action{
 
 func Run(act string, args *[]string) (err error) {
 	defer Handle(&err)
-	state := &State{}
+	state := InitGlobals()
 
 	action, ok := Actions[act]
 	if !ok {
