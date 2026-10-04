@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"merodi/src/core/build/compile/jinja"
 	. "merodi/src/core/state"
+	. "merodi/src/utils/errs"
 	"os"
 
 	L "merodi/src/core/lua"
@@ -27,12 +28,14 @@ func (self *Markdown) Init(state *State) {
 	self.ParsersOption = state.Lua.ParsersOption
 }
 
-func (self *Markdown) ReadMD(mdfile string) (string, error) {
-	content, err := os.ReadFile(mdfile)
-	return string(content), err
+func (self *Markdown) ReadMD(mdfile string) (content string, err error) {
+	defer Handle(&err)
+	content = string(CheckV(os.ReadFile(mdfile)))
+	return
 }
 
-func (self *Markdown) MdToDoc(mdcontent string) (string, error) {
+func (self *Markdown) MdToDoc(mdcontent string) (doc string, err error) {
+	defer Handle(&err)
 	var raw_doc bytes.Buffer
 	mdBytes := []byte(mdcontent)
 
@@ -45,10 +48,8 @@ func (self *Markdown) MdToDoc(mdcontent string) (string, error) {
 		),
 	)
 
-	doc := gm.Parser().Parse(text.NewReader(mdBytes))
-	if err := gm.Renderer().Render(&raw_doc, mdBytes, doc); err != nil {
-		return "", err
-	}
+	node := gm.Parser().Parse(text.NewReader(mdBytes))
+	CheckE(gm.Renderer().Render(&raw_doc, mdBytes, node))
 	body := raw_doc.String()
 
 	if self.Page == nil || !self.Page.Set {

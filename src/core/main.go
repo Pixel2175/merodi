@@ -6,11 +6,7 @@ import (
 	"merodi/src/core/state"
 	"merodi/src/core/watch"
 	"merodi/src/utils"
-)
-
-var (
-	handle = utils.Handle
-	check  = utils.Check
+	. "merodi/src/utils/errs"
 )
 
 type Core state.State
@@ -24,20 +20,20 @@ var Actions = map[string]Action{
 }
 
 func Run(act string, args *[]string) (err error) {
-	defer handle(&err)
+	defer Handle(&err)
 	self := Core{Lua: &lua.Lua{}}
 	action, ok := Actions[act]
 	if !ok {
 		utils.PrintHelp()
 		return
 	}
-	self.BuildMode =  build.SetBuildMode(args)
-	check(self.GoToProjectDir(args))
-	check(self.LoadConfig())
+	self.BuildMode = build.SetBuildMode(args)
+	CheckE(self.GoToProjectDir(args))
+	CheckE(self.LoadConfig())
 
-	check(self.Lua.InitLua(&self.Config))
+	CheckE(self.Lua.InitLua(&self.Config))
 	defer self.Lua.Context.Close()
 
-	check(action.Run((*state.State)(&self), args))
+	CheckE(action.Run((*state.State)(&self), args))
 	return nil
 }

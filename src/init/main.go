@@ -1,10 +1,10 @@
 package init
 
 import (
-	"fmt"
+	"errors"
 	"merodi/src/config"
 	"merodi/src/project"
-	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 	"merodi/src/utils/log"
 )
 
@@ -13,18 +13,15 @@ type Init struct {
 	cfg        config.Tree
 }
 
-var (
-	handle = utils.Handle
-	check  = utils.Check
-)
+var ErrProjectExists = errors.New("project already initialized: `config.toml` already exists")
 
-func (init *Init) GetProjectDir(args *[]string) error {
-	var err error
-	init.ProjectDir, err = project.SetProjectDir(args)
+func (init *Init) GetProjectDir(args *[]string) (err error) {
+	defer Handle(&err)
+	init.ProjectDir = CheckV(project.SetProjectDir(args))
 	if project.IsProjectExists(init.ProjectDir) {
-		err = fmt.Errorf("project already initialized: `config.toml` already exists")
+		CheckE(ErrProjectExists)
 	}
-	return err
+	return
 }
 
 func (init *Init) InitConfig() error {
@@ -36,10 +33,10 @@ func (init *Init) InitConfig() error {
 }
 
 func (init Init) Run(args *[]string) (err error) {
-	defer handle(&err)
-	check(init.GetProjectDir(args))
-	check(init.InitConfig())
-	check(init.Bootstrap())
+	defer Handle(&err)
+	CheckE(init.GetProjectDir(args))
+	CheckE(init.InitConfig())
+	CheckE(init.Bootstrap())
 	log.Info("Project initialized.")
 	return nil
 }

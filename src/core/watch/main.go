@@ -1,8 +1,9 @@
 package watch
 
 import (
+	"errors"
 	"merodi/src/core/state"
-	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 	"os"
 	"time"
 
@@ -11,33 +12,25 @@ import (
 
 type Watcher struct{}
 
-var (
-	handle = utils.Handle
-	check  = utils.Check
-)
-
 func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
-	defer handle(&err)
+	defer Handle(&err)
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
+	watcher := CheckV(fsnotify.NewWatcher())
 	defer watcher.Close()
 
 	if len(state.Lua.Watch.Add) == 0 {
-		check(watcher.Add(state.Config.Tree.Markdown))
+		CheckE(watcher.Add(state.Config.Tree.Markdown))
 	} else {
 		for _, file := range state.Lua.Watch.Add {
-			if _, err := os.Stat(file); os.IsNotExist(err) {
-				return err
-			} else {
-				check(watcher.Add(file))
+			_, statErr := os.Stat(file)
+			if os.IsNotExist(statErr) {
+				CheckE(statErr)
 			}
+			CheckE(watcher.Add(file))
 		}
 	}
 
-	check(state.Lua.RunHook("on_start_watching"))
+	CheckE(state.Lua.RunHook("on_start_watching"))
 
 	lastEvents := make(map[string]time.Time)
 	const debounce = 100 * time.Millisecond
@@ -55,15 +48,14 @@ func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 			}
 
 			lastEvents[event.Name] = now
-			check(state.Lua.RunHook("on_file_changed", event.Op.String(), event.Name))
+			CheckE(state.Lua.RunHook("on_file_changed", event.Op.String(), event.Name))
 
-		case err, ok := <-watcher.Errors:
+		case werr, ok := <-watcher.Errors:
 			if !ok {
 				return nil
 			}
-
-			if err != utils.ErrAborted {
-				return err
+			if !errors.Is(werr, ErrAborted) {
+				CheckE(werr)
 			}
 		}
 	}

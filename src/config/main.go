@@ -1,7 +1,7 @@
 package config
 
 import (
-	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 	"os"
 	"path/filepath"
 
@@ -73,31 +73,26 @@ func (self *Config) ConfigPath() string {
 	return filepath.Join(self.ProjectDir, ConfigFileName)
 }
 
-func (self *Config) Init() error {
-
-	if err := os.MkdirAll(self.ProjectDir, 0755); err != nil {
-		return err
-	}
-	f, err := os.Create(self.ConfigPath())
-	if err != nil {
-		return err
-	}
+func (self *Config) Init() (err error) {
+	defer Handle(&err)
+	CheckE(os.MkdirAll(self.ProjectDir, 0755))
+	f := CheckV(os.Create(self.ConfigPath()))
 	defer f.Close()
 	self.DefaultData()
-	return toml.NewEncoder(f).Encode(self.Data)
+	CheckE(toml.NewEncoder(f).Encode(self.Data))
+	return
 }
 
-func (self *Config) Read() error {
-	_, err := toml.DecodeFile(self.ConfigPath(), &self.Data)
-	return err
+func (self *Config) Read() (err error) {
+	defer Handle(&err)
+	CheckV(toml.DecodeFile(self.ConfigPath(), &self.Data))
+	return
 }
 
 func (self *Config) Write() (err error) {
-	defer utils.Handle(&err)
-	f, err := os.Create(self.ConfigPath())
-	if err != nil {
-		return err
-	}
+	defer Handle(&err)
+	f := CheckV(os.Create(self.ConfigPath()))
 	defer f.Close()
-	return toml.NewEncoder(f).Encode(self.Data)
+	CheckE(toml.NewEncoder(f).Encode(self.Data))
+	return
 }

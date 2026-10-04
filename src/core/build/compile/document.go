@@ -1,6 +1,7 @@
 package compile
 
 import (
+	. "merodi/src/utils/errs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,29 +16,27 @@ func (self *Compile) destRoot() string {
 	return self.State.Config.Tree.DraftDest
 }
 
-func (self *Compile) docDestPath(mdPath string) (string, error) {
-	mdRoot, err := filepath.Abs(self.State.Config.Tree.Markdown)
-	check(err)
-
-	absMd, err := filepath.Abs(mdPath)
-	check(err)
-
-	rel, err := filepath.Rel(mdRoot, absMd)
-	check(err)
+func (self *Compile) docDestPath(mdPath string) (dest string, err error) {
+	defer Handle(&err)
+	mdRoot := CheckV(filepath.Abs(self.State.Config.Tree.Markdown))
+	absMd := CheckV(filepath.Abs(mdPath))
+	rel := CheckV(filepath.Rel(mdRoot, absMd))
 
 	name := strings.TrimSuffix(rel, ".md") + "." + "html"
-	return filepath.Abs(filepath.Join(self.destRoot(), name))
+	dest = CheckV(filepath.Abs(filepath.Join(self.destRoot(), name)))
+	return
 }
 
-func (self *Compile) WriteDoc(docContent string, docPath string) error {
-	if err := os.MkdirAll(filepath.Dir(docPath), 0o755); err != nil {
-		return err
-	}
-	return os.WriteFile(docPath, []byte(docContent), 0o644)
+func (self *Compile) WriteDoc(docContent string, docPath string) (err error) {
+	defer Handle(&err)
+	CheckE(os.MkdirAll(filepath.Dir(docPath), 0o755))
+	CheckE(os.WriteFile(docPath, []byte(docContent), 0o644))
+	return
 }
 
 func (self *Compile) ResolveDocPaths(mdFile string) (mdPath, docPath string, err error) {
+	defer Handle(&err)
 	mdPath = filepath.Join(self.State.ProjectDir, mdFile)
-	docPath, err = self.docDestPath(mdPath)
-	return mdPath, docPath, err
+	docPath = CheckV(self.docDestPath(mdPath))
+	return
 }

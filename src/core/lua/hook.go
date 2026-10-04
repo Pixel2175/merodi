@@ -1,7 +1,7 @@
 package lua
 
 import (
-	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 	"merodi/src/utils/log"
 
 	lua "github.com/yuin/gopher-lua"
@@ -17,7 +17,7 @@ func (self *Lua) registerHook(L *lua.LState) int {
 func (self *Lua) luaAbort(L *lua.LState) int {
 	log.Warn(L.ToString(1))
 	self.Aborted = true
-	panic(utils.ErrAborted)
+	panic(ErrAborted)
 }
 
 func (self *Lua) registerHooks() {
@@ -28,9 +28,10 @@ func (self *Lua) registerHooks() {
 }
 
 func (self *Lua) RunHook(stage string, args ...string) (err error) {
+	defer Handle(&err)
 	fn, ok := self.Hooks[stage]
 	if !ok {
-		return nil
+		return
 	}
 
 	self.Aborted = false
@@ -40,15 +41,15 @@ func (self *Lua) RunHook(stage string, args ...string) (err error) {
 		luaArgs[i] = lua.LString(arg)
 	}
 
-	err = self.Context.CallByParam(lua.P{
+	cerr := self.Context.CallByParam(lua.P{
 		Fn:      fn,
 		NRet:    0,
 		Protect: true,
 	}, luaArgs...)
 
 	if self.Aborted {
-		return utils.ErrAborted
+		CheckE(ErrAborted)
 	}
-
-	return err
+	CheckE(cerr)
+	return
 }

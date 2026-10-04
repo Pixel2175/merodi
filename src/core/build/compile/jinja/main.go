@@ -3,7 +3,7 @@ package jinja
 import (
 	"errors"
 	"fmt"
-	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 	"strings"
 
 	"github.com/nikolalohinski/gonja/v2"
@@ -21,52 +21,47 @@ type JinjaEngine struct {
 	Page   *Page
 }
 
-func (self *JinjaEngine) Init(templates string) error {
-	loader, err := loaders.NewFileSystemLoader(templates)
-
-	if err != nil {
-		return err
-	}
-	self.Loader = loader
+func (self *JinjaEngine) Init(templates string) (err error) {
+	defer Handle(&err)
+	self.Loader = CheckV(loaders.NewFileSystemLoader(templates))
 	self.Config = gonja.DefaultConfig
-	return nil
+	return
 }
-func (self *JinjaEngine) JinjaHandler(html_content *string) error {
+
+func (self *JinjaEngine) JinjaHandler(html_content *string) (err error) {
+	defer Handle(&err)
 	self.Page = &Page{Title: self.Title, Lang: "en"}
-	check := utils.Check
 
-	check(self.registerDocument())
+	CheckE(self.registerDocument())
 
-	shiftedLoader, err := loaders.NewShiftedLoader(
+	shiftedLoader := CheckV(loaders.NewShiftedLoader(
 		"root",
 		strings.NewReader(*html_content),
 		self.Loader,
-	)
-	check(err)
+	))
 
-	tpl, err := exec.NewTemplate(
+	tpl, terr := exec.NewTemplate(
 		"root",
 		self.Config,
 		shiftedLoader,
 		gonja.DefaultEnvironment,
 	)
-	if err != nil {
+	if terr != nil {
 		var syntaxErr *parser.SyntaxError
-		if errors.As(err, &syntaxErr) {
-			return fmt.Errorf(
+		if errors.As(terr, &syntaxErr) {
+			terr = fmt.Errorf(
 				"Jinja syntax error:\n- Line=%d, Column=%d\n- %s",
 				syntaxErr.Line,
 				syntaxErr.Column,
 				syntaxErr.Message,
 			)
 		}
-
-		return err
+		CheckE(terr)
 	}
 
 	ctx := exec.NewContext(self.Data)
 	ctx.Set("document", self.Page)
 
-	*html_content, err = tpl.ExecuteToString(ctx)
-	return err
+	*html_content = CheckV(tpl.ExecuteToString(ctx))
+	return
 }

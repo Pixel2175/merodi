@@ -7,13 +7,14 @@ import (
 	"github.com/nikolalohinski/gonja/v2/nodes"
 	"github.com/nikolalohinski/gonja/v2/parser"
 	"github.com/nikolalohinski/gonja/v2/tokens"
+	. "merodi/src/utils/errs"
 )
 
 type Page struct {
-	Title, Lang string
-	Styles, Scripts   []string
-	Metas             []Meta
-	Set               bool
+	Title, Lang     string
+	Styles, Scripts []string
+	Metas           []Meta
+	Set             bool
 }
 
 type Meta struct {
@@ -33,44 +34,39 @@ func (t *Tag) Execute(r *exec.Renderer, _ *nodes.ControlStructureBlock) error {
 	return nil
 }
 
-func parseArgs(args *parser.Parser, allowed map[string]bool) (map[string]nodes.Expression, error) {
-	exprs := map[string]nodes.Expression{}
-	for !args.End() {
-		key := args.Match(tokens.Name)
-		if key == nil {
-			return nil, args.Error("expected argument name", nil)
-		}
-		if !allowed[key.Val] {
-			return nil, args.Error(fmt.Sprintf("argument %q not exists", key.Val), key)
-		}
-		if args.Match(tokens.Assign) == nil {
-			return nil, args.Error("expected '='", key)
-		}
-		e, err := args.ParseExpression()
-		if err != nil {
-			return nil, err
-		}
-		exprs[key.Val] = e
-	}
-	return exprs, nil
-}
-
 func (self *JinjaEngine) fields() map[string]*string {
 	return map[string]*string{
 		"title": &self.Page.Title, "lang": &self.Page.Lang,
 	}
 }
 
-func (self *JinjaEngine) parseDocument(p *parser.Parser, args *parser.Parser) (nodes.ControlStructure, error) {
+func parseArgs(args *parser.Parser, allowed map[string]bool) (exprs map[string]nodes.Expression, err error) {
+	defer Handle(&err)
+	exprs = map[string]nodes.Expression{}
+	for !args.End() {
+		key := args.Match(tokens.Name)
+		if key == nil {
+			CheckE(args.Error("expected argument name", nil))
+		}
+		if !allowed[key.Val] {
+			CheckE(args.Error(fmt.Sprintf("argument %q not exists", key.Val), key))
+		}
+		if args.Match(tokens.Assign) == nil {
+			CheckE(args.Error("expected '='", key))
+		}
+		exprs[key.Val] = CheckV(args.ParseExpression())
+	}
+	return
+}
+
+func (self *JinjaEngine) parseDocument(p *parser.Parser, args *parser.Parser) (cs nodes.ControlStructure, err error) {
+	defer Handle(&err)
 	dst := self.fields()
 	allowed := map[string]bool{}
 	for k := range dst {
 		allowed[k] = true
 	}
-	exprs, err := parseArgs(args, allowed)
-	if err != nil {
-		return nil, err
-	}
+	exprs := CheckV(parseArgs(args, allowed))
 	return &Tag{p.Current(), func(r *exec.Renderer) {
 		for k, e := range exprs {
 			*dst[k] = r.Eval(e).String()
@@ -79,11 +75,9 @@ func (self *JinjaEngine) parseDocument(p *parser.Parser, args *parser.Parser) (n
 	}}, nil
 }
 
-func (self *JinjaEngine) parseMeta(p *parser.Parser, args *parser.Parser) (nodes.ControlStructure, error) {
-	exprs, err := parseArgs(args, map[string]bool{"name": true, "content": true})
-	if err != nil {
-		return nil, err
-	}
+func (self *JinjaEngine) parseMeta(p *parser.Parser, args *parser.Parser) (cs nodes.ControlStructure, err error) {
+	defer Handle(&err)
+	exprs := CheckV(parseArgs(args, map[string]bool{"name": true, "content": true}))
 	return &Tag{p.Current(), func(r *exec.Renderer) {
 		m := Meta{}
 		if e, ok := exprs["name"]; ok {
@@ -97,11 +91,9 @@ func (self *JinjaEngine) parseMeta(p *parser.Parser, args *parser.Parser) (nodes
 }
 
 func parseList(list func() *[]string) parser.ControlStructureParser {
-	return func(p *parser.Parser, args *parser.Parser) (nodes.ControlStructure, error) {
-		e, err := args.ParseExpression()
-		if err != nil {
-			return nil, err
-		}
+	return func(p *parser.Parser, args *parser.Parser) (cs nodes.ControlStructure, err error) {
+		defer Handle(&err)
+		e := CheckV(args.ParseExpression())
 		return &Tag{p.Current(), func(r *exec.Renderer) {
 			l := list()
 			*l = append(*l, r.Eval(e).String())
@@ -109,7 +101,8 @@ func parseList(list func() *[]string) parser.ControlStructureParser {
 	}
 }
 
-func (self *JinjaEngine) registerDocument() error {
+func (self *JinjaEngine) registerDocument() (err error) {
+	defer Handle(&err)
 	cs := gonja.DefaultEnvironment.ControlStructures
 	tags := map[string]parser.ControlStructureParser{
 		"document": self.parseDocument,
@@ -119,14 +112,10 @@ func (self *JinjaEngine) registerDocument() error {
 	}
 	for name, p := range tags {
 		if cs.Exists(name) {
-			if err := cs.Replace(name, p); err != nil {
-				return err
-			}
+			CheckE(cs.Replace(name, p))
 			continue
 		}
-		if err := cs.Register(name, p); err != nil {
-			return err
-		}
+		CheckE(cs.Register(name, p))
 	}
-	return nil
+	return
 }

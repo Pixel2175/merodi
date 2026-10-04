@@ -4,6 +4,7 @@ import (
 	"merodi/src/core"
 	. "merodi/src/init"
 	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 	"merodi/src/utils/log"
 	"os"
 )
@@ -11,27 +12,27 @@ import (
 const VERSION = "0.5.1"
 
 func main() {
-	args := os.Args[1:]
+	if err := run(os.Args[1:]); err != nil {
+		log.Die(err.Error())
+	}
+}
+
+func run(args []string) (err error) {
+	defer Handle(&err)
+
 	if len(args) == 0 {
 		utils.PrintHelp()
 		return
 	}
-	pos := utils.Pop(&args, 0)
+	cmd := utils.Pop(&args, 0)
 
-	var err error
-	switch pos {
+	switch cmd {
 	case "init", "new":
-		init := Init{}
-		err = init.Run(&args)
-
+		CheckE((&Init{}).Run(&args))
 	case "version":
 		log.Info(log.Title("Version"), "Merodi %s", VERSION)
-
 	default:
-		err = core.Run(pos, &args)
+		CheckE(core.Run(cmd, &args))
 	}
-
-	if err != nil {
-		log.Die(err.Error())
-	}
+	return
 }

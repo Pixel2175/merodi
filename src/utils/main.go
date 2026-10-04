@@ -1,27 +1,8 @@
 package utils
 
 import (
-	"errors"
 	"merodi/src/utils/log"
 )
-
-var ErrAborted = errors.New("build aborted")
-
-func Handle(err *error) {
-	if r := recover(); r != nil {
-		if e, ok := r.(error); ok {
-			*err = e
-		} else {
-			panic(r)
-		}
-	}
-}
-
-func Check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
 
 func PrintHelp() {
 	log.Info(log.Title("Usage"), ": merodi {init,watch,build,version} <path> ...")

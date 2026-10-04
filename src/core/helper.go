@@ -3,25 +3,23 @@ package core
 import (
 	"merodi/src/config"
 	"merodi/src/project"
+	. "merodi/src/utils/errs"
 	"os"
 )
 
-func (self *Core) GoToProjectDir(args *[]string) error {
-	dir, err := project.SetProjectDir(args)
-
-	if err != nil {
-		return err
-	}
+func (self *Core) GoToProjectDir(args *[]string) (err error) {
+	defer Handle(&err)
+	dir := CheckV(project.SetProjectDir(args))
 	self.ProjectDir = dir
-	return os.Chdir(dir)
+	CheckE(os.Chdir(dir))
+	return
 }
 
-func (self *Core) LoadConfig() error {
+func (self *Core) LoadConfig() (err error) {
+	defer Handle(&err)
 	var cfg config.Config
 	cfg.ProjectDir = self.ProjectDir
-	if err := cfg.Read(); err != nil {
-		return err
-	}
+	CheckE(cfg.Read())
 	self.Config = cfg.Data
-	return nil
+	return
 }

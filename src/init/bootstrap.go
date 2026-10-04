@@ -2,27 +2,26 @@ package init
 
 import (
 	"merodi/src/config"
+	. "merodi/src/utils/errs"
 	"os"
 	"path/filepath"
 )
 
-func (init *Init) CreateDirectories(tree config.Tree) error {
+func (init *Init) CreateDirectories(tree config.Tree) (err error) {
+	defer Handle(&err)
 	for _, dir := range []string{
 		tree.Markdown,
 		tree.Templates,
 		tree.Plugins,
 	} {
 		path := filepath.Join(init.ProjectDir, dir)
-
-		if err := os.MkdirAll(path, 0755); err != nil {
-			return err
-		}
+		CheckE(os.MkdirAll(path, 0755))
 	}
-
-	return nil
+	return
 }
 
-func (init *Init) CreateFiles(tree config.Tree) error {
+func (init *Init) CreateFiles(tree config.Tree) (err error) {
+	defer Handle(&err)
 	files := map[string]string{
 		filepath.Join(init.ProjectDir, tree.Markdown, "index.md"):     MarkdownContent,
 		filepath.Join(init.ProjectDir, tree.Templates, "layout.html"): HTMLContent,
@@ -30,20 +29,14 @@ func (init *Init) CreateFiles(tree config.Tree) error {
 	}
 
 	for path, content := range files {
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-			return err
-		}
+		CheckE(os.WriteFile(path, []byte(content), 0644))
 	}
-
-	return nil
+	return
 }
 
-func (self *Init) Bootstrap() error {
-	err := self.CreateDirectories(self.cfg)
-	if err != nil {
-		return err
-	}
-
-	err = self.CreateFiles(self.cfg)
-	return err
+func (self *Init) Bootstrap() (err error) {
+	defer Handle(&err)
+	CheckE(self.CreateDirectories(self.cfg))
+	CheckE(self.CreateFiles(self.cfg))
+	return
 }

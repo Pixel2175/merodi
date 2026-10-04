@@ -5,7 +5,7 @@ import (
 	"merodi/src/config"
 	"merodi/src/core/build/compile"
 	. "merodi/src/core/state"
-	"merodi/src/utils"
+	. "merodi/src/utils/errs"
 )
 
 type Build struct {
@@ -14,42 +14,38 @@ type Build struct {
 	compile *compile.Compile
 }
 
-var (
-	handle = utils.Handle
-	check  = utils.Check
-)
-
 func (self *Build) InitCompile() {
 	self.state.Lua.Build.Mode = self.mode
 	self.compile = &compile.Compile{State: self.state}
-	check(self.compile.Init(self.mode))
+	CheckE(self.compile.Init(self.mode))
 }
 
-func (self *Build) BuildFile(path string) error {
-	html, err := self.compile.Run(path)
-	check(err)
-
-	_, docPath, err := self.compile.ResolveDocPaths(path)
-	check(err)
-
-	return self.writeDoc(docPath, html)
+func (self *Build) BuildFile(path string) (err error) {
+	defer Handle(&err)
+	html := CheckV(self.compile.Run(path))
+	_, docPath, rerr := self.compile.ResolveDocPaths(path)
+	CheckE(rerr)
+	CheckE(self.writeDoc(docPath, html))
+	return
 }
 
-func (self *Build) Visit(path string, entry fs.DirEntry, err error) error {
-	check(err)
+func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error) {
+	defer Handle(&rerr)
+	CheckE(err)
 	if !self.isSource(entry) {
-		return nil
+		return
 	}
-	check(self.BuildFile(path))
-	return nil
+	CheckE(self.BuildFile(path))
+	return
 }
 
 func (self *Build) Run(state *State, args *[]string) (err error) {
-	defer handle(&err)
+	defer Handle(&err)
 
 	self.state = state
-	self.InitCompile()
 	self.mode = state.BuildMode
+	self.InitCompile()
 
-	return self.walkAndBuild()
+	CheckE(self.walkAndBuild())
+	return
 }

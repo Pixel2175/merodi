@@ -1,15 +1,14 @@
 package path
 
 import (
+	. "merodi/src/utils/errs"
 	"os"
 	"path/filepath"
 )
 
-func Getwd() string {
-	dir, err := os.Getwd()
-	if err != nil {
-		return filepath.Clean(".")
-	}
-
-	return dir
+func Getwd() (dir string) {
+	var err error
+	defer Handle(&err, func(error) { dir = filepath.Clean(".") })
+	dir = CheckV(os.Getwd())
+	return
 }

@@ -2,6 +2,7 @@ package lua
 
 import (
 	"merodi/src/config"
+	. "merodi/src/utils/errs"
 	"path/filepath"
 
 	"github.com/yuin/goldmark"
@@ -25,7 +26,8 @@ type Lua struct {
 	Aborted bool
 }
 
-func (self *Lua) InitLua(cfg *config.Data) error {
+func (self *Lua) InitLua(cfg *config.Data) (err error) {
+	defer Handle(&err)
 	self.Config = cfg
 	self.Hooks = make(map[string]*glua.LFunction)
 	self.Jinja = make(map[string]any)
@@ -37,24 +39,22 @@ func (self *Lua) InitLua(cfg *config.Data) error {
 	self.registerMerodi()
 
 	path := filepath.Join(cfg.Tree.Plugins, "main.lua")
-	if err := self.loadFile(path); err != nil {
-		return err
-	}
-	return nil
+	CheckE(self.loadFile(path))
+	return
 }
 
-func (self *Lua) loadFile(path string) error {
-	fn, err := self.Context.LoadFile(path)
-	if err != nil {
-		return describeLuaError(path, err)
+func (self *Lua) loadFile(path string) (err error) {
+	defer Handle(&err)
+	fn, lerr := self.Context.LoadFile(path)
+	if lerr != nil {
+		CheckE(describeLuaError(path, lerr))
 	}
 
 	self.Context.Push(fn)
-	if err := self.Context.PCall(0, glua.MultRet, nil); err != nil {
-		return describeLuaError(path, err)
+	if perr := self.Context.PCall(0, glua.MultRet, nil); perr != nil {
+		CheckE(describeLuaError(path, perr))
 	}
-
-	return nil
+	return
 }
 func (self *Lua) registerMerodi() {
 	self.Merodi = self.Context.NewTable()
