@@ -11,7 +11,7 @@ type Compile struct {
 	State *state.State
 	Jinja JinjaEngine
 	MD    Markdown
-	Build state.Build
+	Build *state.Build
 }
 
 func (self *Compile) Init() (err error) {
@@ -26,15 +26,25 @@ func (self *Compile) Init() (err error) {
 	return nil
 }
 
-func (self *Compile) Run(mdfile string) (doc string, err error) {
+func (self *Compile) Convert() (doccontent string) {
+	self.applyJinja()
+	self.convertToDoc()
+	return self.Build.Content
+}
+
+func (self *Compile) Run(mdfile string) (err error) {
 	defer Handle(&err)
 	defer self.reset()
 
 	self.resolvePaths(mdfile)
 	self.readMarkdown()
-	self.applyJinja()
-	self.convertToDoc()
-	self.hook("before_write")
 
-	return self.State.Build.Content, nil
+	doc := self.Convert()
+
+	_, docPath, rerr := self.ResolveDocPaths(mdfile)
+	CheckE(rerr)
+
+	self.hook("before_write")
+	CheckE(self.WriteDoc(doc, docPath))
+	return
 }

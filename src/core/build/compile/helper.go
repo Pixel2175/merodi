@@ -10,37 +10,32 @@ func (self *Compile) hook(name string) {
 }
 
 func (self *Compile) resolvePaths(mdfile string) {
-	build := self.State.Build
 	mdPath, docPath, err := self.ResolveDocPaths(mdfile)
 	CheckE(err)
-	build.MDPath, build.DocPath = mdPath, docPath
+	self.Build.MDPath, self.Build.DocPath = mdPath, docPath
 }
 
 func (self *Compile) readMarkdown() {
-	build := self.State.Build
 	self.hook("before_read")
-	build.Content = CheckV(self.MD.ReadMD(build.MDPath))
+	self.Build.Content = CheckV(self.MD.ReadMD(self.Build.MDPath))
 	self.hook("read_md")
 }
 
 func (self *Compile) convertToDoc() {
-	build := self.State.Build
 	self.MD.Page = *self.Jinja.Page
-	build.Content = CheckV(self.MD.MdToDoc(build.Content))
+	self.Build.Content = CheckV(self.MD.MdToDoc(self.Build.Content))
 	self.hook("doc_content")
 }
 
 func (self *Compile) applyJinja() {
-	build := self.State.Build
 	self.Jinja.Data = self.State.Jinja
-	CheckE(self.Jinja.JinjaHandler(&build.Content))
+	CheckE(self.Jinja.JinjaHandler(&self.Build.Content))
 	self.hook("apply_doc_jinja")
 }
 
 func (self *Compile) reset() {
-	build := self.State.Build
-	build.Content = ""
-	build.DocPath = ""
-	build.MDPath = ""
-	build.Mode = config.None
+	self.Build.Content = ""
+	self.Build.DocPath = ""
+	self.Build.MDPath = ""
+	self.Build.Mode = config.None
 }

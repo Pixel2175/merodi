@@ -15,15 +15,7 @@ type Build struct {
 func (self *Build) InitCompile() {
 	self.compile = &compile.Compile{State: self.state}
 	CheckE(self.compile.Init())
-}
-
-func (self *Build) BuildFile(path string) (err error) {
-	defer Handle(&err)
-	html := CheckV(self.compile.Run(path))
-	_, docPath, rerr := self.compile.ResolveDocPaths(path)
-	CheckE(rerr)
-	CheckE(self.writeDoc(docPath, html))
-	return
+	self.compile.Build = &self.state.Build
 }
 
 func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error) {
@@ -37,7 +29,7 @@ func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error)
 	if !self.isSource(entry) {
 		return
 	}
-	CheckE(self.BuildFile(path))
+	CheckE(self.compile.Run(path))
 	return
 }
 
