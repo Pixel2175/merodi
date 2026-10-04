@@ -20,6 +20,7 @@ type Markdown struct {
 }
 
 func (self *Markdown) Init(state *state.State) {
+	self.Markdown = &state.Markdown
 	self.Extensions = state.Markdown.Extensions
 	self.ParsersOption = state.Markdown.ParsersOption
 }
