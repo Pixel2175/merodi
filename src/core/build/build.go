@@ -2,22 +2,19 @@ package build
 
 import (
 	"io/fs"
-	"merodi/src/config"
 	"merodi/src/core/build/compile"
-	. "merodi/src/core/state"
+	"merodi/src/core/state"
 	. "merodi/src/utils/errs"
 )
 
 type Build struct {
-	state   *State
-	mode    config.Mode
+	state   *state.State
 	compile *compile.Compile
 }
 
 func (self *Build) InitCompile() {
-	self.state.Lua.Build.Mode = self.mode
 	self.compile = &compile.Compile{State: self.state}
-	CheckE(self.compile.Init(self.mode))
+	CheckE(self.compile.Init())
 }
 
 func (self *Build) BuildFile(path string) (err error) {
@@ -30,7 +27,12 @@ func (self *Build) BuildFile(path string) (err error) {
 }
 
 func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error) {
-	defer Handle(&rerr)
+	defer Handle(&rerr, func (err *error) {
+		if *err == ErrAborted {
+			*err = self.state.RunHook("on_abort")
+		}
+	})
+
 	CheckE(err)
 	if !self.isSource(entry) {
 		return
@@ -39,11 +41,10 @@ func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error)
 	return
 }
 
-func (self *Build) Run(state *State, args *[]string) (err error) {
+func (self *Build) Run(state *state.State, args *[]string) (err error) {
 	defer Handle(&err)
 
 	self.state = state
-	self.mode = state.BuildMode
 	self.InitCompile()
 
 	CheckE(self.walkAndBuild())

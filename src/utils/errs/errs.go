@@ -6,7 +6,7 @@ import (
 
 var ErrAborted = errors.New("build aborted")
 
-func Handle(err *error, fn ...func(error)) {
+func Handle(err *error, fn ...func(*error)) {
 	if r := recover(); r != nil {
 		e, ok := r.(error)
 		if !ok {
@@ -14,7 +14,7 @@ func Handle(err *error, fn ...func(error)) {
 		}
 		*err = e
 		if len(fn) > 0 && fn[0] != nil {
-			fn[0](e)
+			fn[0](err)
 		}
 	}
 }

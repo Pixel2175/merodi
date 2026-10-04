@@ -57,18 +57,18 @@ func (self *Lua) registerEnable() {
 
 			fn := self.Context.NewFunction(func(L *glua.LState) int {
 				if ext, ok := extensionsMap[name]; ok {
-					self.Extensions = append(self.Extensions, ext)
+					self.State.Markdown.Extensions = append(self.State.Markdown.Extensions, ext)
 					return 0
 				}
 
 				if option, ok := parsersMap[name]; ok {
-					self.ParsersOption = append(self.ParsersOption, option)
+					self.State.Markdown.ParsersOption = append(self.State.Markdown.ParsersOption, option)
 					return 0
 				}
 
 				if p, ok := inlineParsersMap[name]; ok {
-					self.ParsersOption = append(
-						self.ParsersOption,
+					self.State.Markdown.ParsersOption = append(
+						self.State.Markdown.ParsersOption,
 						parser.WithInlineParsers(
 							util.Prioritized(p, 100),
 						),
@@ -77,8 +77,8 @@ func (self *Lua) registerEnable() {
 				}
 
 				if p, ok := blockParsersMap[name]; ok {
-					self.ParsersOption = append(
-						self.ParsersOption,
+					self.State.Markdown.ParsersOption = append(
+						self.State.Markdown.ParsersOption,
 						parser.WithBlockParsers(
 							util.Prioritized(p, 100),
 						),

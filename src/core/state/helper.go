@@ -1,4 +1,4 @@
-package core
+package state
 
 import (
 	"merodi/src/config"
@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func (self *Core) GoToProjectDir(args *[]string) (err error) {
+func (self *State) GoToProjectDir(args *[]string) (err error) {
 	defer Handle(&err)
 	dir := CheckV(project.SetProjectDir(args))
 	self.ProjectDir = dir
@@ -15,7 +15,7 @@ func (self *Core) GoToProjectDir(args *[]string) (err error) {
 	return
 }
 
-func (self *Core) LoadConfig() (err error) {
+func (self *State) LoadConfig() (err error) {
 	defer Handle(&err)
 	var cfg config.Config
 	cfg.ProjectDir = self.ProjectDir

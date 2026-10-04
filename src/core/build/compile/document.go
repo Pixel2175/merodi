@@ -10,7 +10,7 @@ import (
 )
 
 func (self *Compile) destRoot() string {
-	if self.State.BuildMode == config.Release {
+	if self.State.Build.Mode == config.Release {
 		return self.State.Config.Tree.ReleaseDest
 	}
 	return self.State.Config.Tree.DraftDest

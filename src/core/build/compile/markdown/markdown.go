@@ -3,11 +3,9 @@ package markdown
 import (
 	"bytes"
 	"merodi/src/core/build/compile/jinja"
-	. "merodi/src/core/state"
+	"merodi/src/core/state"
 	. "merodi/src/utils/errs"
 	"os"
-
-	L "merodi/src/core/lua"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
@@ -17,15 +15,13 @@ import (
 )
 
 type Markdown struct {
-	Extensions    []goldmark.Extender
-	ParsersOption []parser.Option
-	Build         L.Build
-	Page          *jinja.Page
+	*state.Markdown
+	state.State
 }
 
-func (self *Markdown) Init(state *State) {
-	self.Extensions = state.Lua.Extensions
-	self.ParsersOption = state.Lua.ParsersOption
+func (self *Markdown) Init(state *state.State) {
+	self.Extensions = state.Markdown.Extensions
+	self.ParsersOption = state.Markdown.ParsersOption
 }
 
 func (self *Markdown) ReadMD(mdfile string) (content string, err error) {
@@ -52,7 +48,7 @@ func (self *Markdown) MdToDoc(mdcontent string) (doc string, err error) {
 	CheckE(gm.Renderer().Render(&raw_doc, mdBytes, node))
 	body := raw_doc.String()
 
-	if self.Page == nil || !self.Page.Set {
+	if !self.Page.Set {
 		return body, nil
 	}
 

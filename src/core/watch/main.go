@@ -10,18 +10,21 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-type Watcher struct{}
+type Watcher struct{
+	State *state.State
+}
 
 func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 	defer Handle(&err)
+	self.State = state
 
 	watcher := CheckV(fsnotify.NewWatcher())
 	defer watcher.Close()
 
-	if len(state.Lua.Watch.Add) == 0 {
+	if len(state.Watch.Add) == 0 {
 		CheckE(watcher.Add(state.Config.Tree.Markdown))
 	} else {
-		for _, file := range state.Lua.Watch.Add {
+		for _, file := range self.State.Watch.Add {
 			_, statErr := os.Stat(file)
 			if os.IsNotExist(statErr) {
 				CheckE(statErr)
@@ -30,7 +33,7 @@ func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 		}
 	}
 
-	CheckE(state.Lua.RunHook("on_start_watching"))
+	CheckE(self.State.RunHook("on_start_watching"))
 
 	lastEvents := make(map[string]time.Time)
 	const debounce = 100 * time.Millisecond
@@ -48,7 +51,7 @@ func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
 			}
 
 			lastEvents[event.Name] = now
-			CheckE(state.Lua.RunHook("on_file_changed", event.Op.String(), event.Name))
+			CheckE(state.RunHook("on_file_changed", event.Op.String(), event.Name))
 
 		case werr, ok := <-watcher.Errors:
 			if !ok {

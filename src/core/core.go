@@ -3,15 +3,14 @@ package core
 import (
 	"merodi/src/core/build"
 	"merodi/src/core/lua"
-	"merodi/src/core/state"
+	. "merodi/src/core/state"
 	"merodi/src/core/watch"
 	"merodi/src/utils"
 	. "merodi/src/utils/errs"
 )
 
-type Core state.State
 type Action interface {
-	Run(state *state.State, args *[]string) error
+	Run(state *State, args *[]string) error
 }
 
 var Actions = map[string]Action{
@@ -21,19 +20,19 @@ var Actions = map[string]Action{
 
 func Run(act string, args *[]string) (err error) {
 	defer Handle(&err)
-	self := Core{Lua: &lua.Lua{}}
+	state := &State{}
+
 	action, ok := Actions[act]
 	if !ok {
 		utils.PrintHelp()
 		return
 	}
-	self.BuildMode = build.SetBuildMode(args)
-	CheckE(self.GoToProjectDir(args))
-	CheckE(self.LoadConfig())
 
-	CheckE(self.Lua.InitLua(&self.Config))
-	defer self.Lua.Context.Close()
+	state.Build.Mode = build.SetBuildMode(args)
+	CheckE(state.GoToProjectDir(args))
+	CheckE(state.LoadConfig())
+	CheckE(lua.Init(state))
+	CheckE(action.Run(state, args))
 
-	CheckE(action.Run((*state.State)(&self), args))
 	return nil
 }

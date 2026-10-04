@@ -5,31 +5,24 @@ import (
 	"merodi/src/config"
 )
 
-type Build struct {
-	MDPath  string
-	DocPath string
-	Content string
-	Mode    config.Mode
-}
-
 func (self *Lua) registerBuild() {
 	dataTable := self.Context.NewTable()
 	dataTable.RawSetString("mode", self.Context.NewFunction(func(L *glua.LState) int {
-		L.Push(glua.LString(config.ModeToString(self.Build.Mode)))
+		L.Push(glua.LString(config.ModeToString(self.State.Build.Mode)))
 		return 1
 	}))
 
 	dataTable.RawSetString("content", self.makeGetSetTable(
-		func() string { return self.Build.Content },
-		func(v string) { self.Build.Content = v },
+		func() string { return self.State.Build.Content },
+		func(v string) { self.State.Build.Content = v },
 	))
 	dataTable.RawSetString("md_path", self.makeGetSetTable(
-		func() string { return self.Build.MDPath },
-		func(v string) { self.Build.MDPath = v },
+		func() string { return self.State.Build.MDPath },
+		func(v string) { self.State.Build.MDPath = v },
 	))
 	dataTable.RawSetString("document_path", self.makeGetSetTable(
-		func() string { return self.Build.DocPath },
-		func(v string) { self.Build.DocPath = v },
+		func() string { return self.State.Build.DocPath },
+		func(v string) { self.State.Build.DocPath = v },
 	))
 
 	self.Merodi.RawSetString("build", dataTable)

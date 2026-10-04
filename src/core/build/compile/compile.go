@@ -1,25 +1,21 @@
 package compile
 
 import (
-	"merodi/src/config"
 	. "merodi/src/core/build/compile/jinja"
 	. "merodi/src/core/build/compile/markdown"
-	L "merodi/src/core/lua"
 	"merodi/src/core/state"
 	. "merodi/src/utils/errs"
 )
 
 type Compile struct {
-	State *state.State
-	Lua   *L.Lua
-	Jinja JinjaEngine
-	MD    Markdown
+	State  *state.State
+	Jinja  JinjaEngine
+	MD     Markdown
+	Build  state.Build
 }
 
-func (self *Compile) Init(mode config.Mode) (err error) {
+func (self *Compile) Init() (err error) {
 	defer Handle(&err)
-
-	self.Lua = self.State.Lua
 
 	self.Jinja = JinjaEngine{Title: self.State.Config.Project.Description}
 	CheckE(self.Jinja.Init(self.State.Config.Tree.Templates))
@@ -40,5 +36,5 @@ func (self *Compile) Run(mdfile string) (doc string, err error) {
 	self.convertToDoc()
 	self.hook("before_write")
 
-	return self.Lua.Build.Content, nil
+	return self.State.Build.Content, nil
 }
