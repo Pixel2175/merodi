@@ -17,7 +17,7 @@ type State struct {
 	Build      Build
 	Jinja      map[string]any
 	Hooks      map[string]*glua.LFunction
-	Lua  	   Lua
+	Lua        Lua
 	Markdown   Markdown
 	Watch      Watcher
 }
@@ -26,7 +26,6 @@ type Lua struct {
 	Context *glua.LState
 	Aborted bool
 }
-
 
 type Build struct {
 	MDPath  string

@@ -27,7 +27,7 @@ func (self *Build) BuildFile(path string) (err error) {
 }
 
 func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error) {
-	defer Handle(&rerr, func (err *error) {
+	defer Handle(&rerr, func(err *error) {
 		if *err == ErrAborted {
 			*err = self.state.RunHook("on_abort")
 		}

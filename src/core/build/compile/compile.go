@@ -8,10 +8,10 @@ import (
 )
 
 type Compile struct {
-	State  *state.State
-	Jinja  JinjaEngine
-	MD     Markdown
-	Build  state.Build
+	State *state.State
+	Jinja JinjaEngine
+	MD    Markdown
+	Build state.Build
 }
 
 func (self *Compile) Init() (err error) {

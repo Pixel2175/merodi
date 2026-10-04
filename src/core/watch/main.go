@@ -10,7 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-type Watcher struct{
+type Watcher struct {
 	State *state.State
 }
 
