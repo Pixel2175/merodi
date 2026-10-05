@@ -35,6 +35,7 @@ func Run(act string, args *[]string) (err error) {
 	CheckE(state.LoadConfig())
 	if act != "clean" {
 		CheckE(lua.Init(&state))
+		defer state.Lua.Context.Close()
 	}
 	CheckE(action.Run(&state, args))
 

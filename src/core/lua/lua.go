@@ -23,7 +23,6 @@ func Init(st *state.State) (err error) {
 		State:   st,
 		Context: st.Lua.Context,
 	}
-	defer self.Context.Close()
 
 	self.State.Lua.Aborted = false
 
