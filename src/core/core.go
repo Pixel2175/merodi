@@ -33,7 +33,9 @@ func Run(act string, args *[]string) (err error) {
 	state.Build.Mode = build.SetBuildMode(args)
 	CheckE(state.GoToProjectDir(args))
 	CheckE(state.LoadConfig())
-	CheckE(lua.Init(&state))
+	if act != "clean" {
+		CheckE(lua.Init(&state))
+	}
 	CheckE(action.Run(&state, args))
 
 	return nil
