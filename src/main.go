@@ -12,13 +12,11 @@ import (
 const VERSION = "0.5.2"
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
-		log.Die(err.Error())
-	}
-}
-
-func run(args []string) (err error) {
-	defer Handle(&err)
+	args := os.Args[1:]
+	var err error 
+	defer Handle(&err, func(err *error) {
+		log.Die((*err).Error())
+	})
 
 	if len(args) == 0 {
 		utils.PrintHelp()
