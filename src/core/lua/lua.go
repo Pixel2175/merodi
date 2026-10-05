@@ -58,5 +58,6 @@ func (self *Lua) registerMerodi() {
 	self.registerEnable()
 	self.registerDisable()
 	self.registerLog()
+	self.registerCompile()
 	self.State.Lua.Context.SetGlobal("merodi", self.Merodi)
 }
