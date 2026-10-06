@@ -69,14 +69,12 @@ func (self *Markdown) wrapHTML(body string) string {
 	for _, s := range self.Page.Styles {
 		b.WriteString(`<link rel="stylesheet" href="` + s + `">` + "\n")
 	}
+	for _, s := range self.Page.Scripts {
+		b.WriteString(`<script src="` + s + `" defer></script>` + "\n")
+	}
 
 	b.WriteString("</head>\n<body>\n")
 	b.WriteString(body)
-
-	for _, s := range self.Page.Scripts {
-		b.WriteString(`<script src="` + s + `"></script>` + "\n")
-	}
-
 	b.WriteString("</body>\n</html>")
 	return b.String()
 }
