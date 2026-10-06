@@ -6,6 +6,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/util"
 	glua "github.com/yuin/gopher-lua"
+	ga "github.com/mdigger/goldmark-attributes"
 )
 
 var extensionsMap = map[string]goldmark.Extender{
@@ -18,10 +19,11 @@ var extensionsMap = map[string]goldmark.Extender{
 	"Footnote":       extension.Footnote,
 	"Typographer":    extension.Typographer,
 	"CJK":            extension.CJK,
+	"BlockAttr":      ga.Extension,
 }
 
 var parsersMap = map[string]parser.Option{
-	"HtmlAttr":      parser.WithAttribute(),
+	"HeaderAttr":    parser.WithAttribute(),
 	"AutoHeadingID": parser.WithAutoHeadingID(),
 	"EscapedSpace":  parser.WithEscapedSpace(),
 }
