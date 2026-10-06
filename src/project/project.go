@@ -8,12 +8,17 @@ import (
 	"path/filepath"
 )
 
-func SetProjectDir(args *[]string) (string, error) {
+func GetProjectDir(args *[]string)  (string, error) {
 	projectPath := path.Getwd()
 	if len(*args) > 0 {
 		projectPath = utils.Pop(args, 0)
 	}
-	projectPath = CheckV(filepath.Abs(projectPath))
+
+	return filepath.Abs(projectPath)
+}
+
+func SetProjectDir(args *[]string) (string, error) {
+	projectPath := CheckV(GetProjectDir(args))
 
 	for projectPath != "/" {
 		if IsProjectExists(projectPath) {

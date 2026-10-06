@@ -17,7 +17,7 @@ var ErrProjectExists = errors.New("project already initialized: `config.toml` al
 
 func (init *Init) GetProjectDir(args *[]string) (err error) {
 	defer Handle(&err)
-	init.ProjectDir = CheckV(project.SetProjectDir(args))
+	init.ProjectDir = CheckV(project.GetProjectDir(args))
 	if project.IsProjectExists(init.ProjectDir) {
 		CheckE(ErrProjectExists)
 	}
