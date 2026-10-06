@@ -1,7 +1,6 @@
 package compile
 
 import (
-	"merodi/src/config"
 	. "merodi/src/utils/errs"
 )
 
@@ -37,5 +36,4 @@ func (self *Compile) reset() {
 	self.Build.Content = ""
 	self.Build.DocPath = ""
 	self.Build.MDPath = ""
-	self.Build.Mode = config.None
 }
