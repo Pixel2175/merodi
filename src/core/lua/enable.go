@@ -7,6 +7,7 @@ import (
 	"github.com/yuin/goldmark/util"
 	glua "github.com/yuin/gopher-lua"
 	ga "github.com/mdigger/goldmark-attributes"
+	gia "github.com/nemunaire/goldmark-inline-attributes"
 )
 
 var extensionsMap = map[string]goldmark.Extender{
@@ -20,6 +21,7 @@ var extensionsMap = map[string]goldmark.Extender{
 	"Typographer":    extension.Typographer,
 	"CJK":            extension.CJK,
 	"BlockAttr":      ga.Extension,
+	"InlineAttr":     gia.Extension,
 }
 
 var parsersMap = map[string]parser.Option{
