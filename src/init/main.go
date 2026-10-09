@@ -15,9 +15,9 @@ type Init struct {
 
 var ErrProjectExists = errors.New("project already initialized: `config.toml` already exists")
 
-func (init *Init) GetProjectDir(args *[]string) (err error) {
+func (init *Init) GetProjectDir() (err error) {
 	defer Handle(&err)
-	init.ProjectDir = CheckV(project.GetProjectDir(args))
+	init.ProjectDir = CheckV(project.GetProjectDir(init.ProjectDir))
 	if project.IsProjectExists(init.ProjectDir) {
 		CheckE(ErrProjectExists)
 	}
@@ -32,9 +32,9 @@ func (init *Init) InitConfig() error {
 	return cfg.Write()
 }
 
-func (init Init) Run(args *[]string) (err error) {
+func (init Init) Run() (err error) {
 	defer Handle(&err)
-	CheckE(init.GetProjectDir(args))
+	CheckE(init.GetProjectDir())
 	CheckE(init.InitConfig())
 	CheckE(init.Bootstrap())
 	log.Info("Project initialized.")

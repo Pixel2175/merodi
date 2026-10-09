@@ -3,6 +3,7 @@ package watch
 import (
 	"errors"
 	"merodi/src/core/state"
+	"merodi/src/parser"
 	. "merodi/src/utils/errs"
 	"os"
 	"time"
@@ -14,7 +15,7 @@ type Watcher struct {
 	State *state.State
 }
 
-func (self *Watcher) Run(state *state.State, args *[]string) (err error) {
+func (self *Watcher) Run(state *state.State, opt *parser.Option) (err error) {
 	defer Handle(&err)
 	self.State = state
 

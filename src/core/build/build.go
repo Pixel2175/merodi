@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"merodi/src/core/build/compile"
 	"merodi/src/core/state"
+	"merodi/src/parser"
 	. "merodi/src/utils/errs"
 )
 
@@ -33,7 +34,7 @@ func (self *Build) Visit(path string, entry fs.DirEntry, err error) (rerr error)
 	return
 }
 
-func (self *Build) Run(state *state.State, args *[]string) (err error) {
+func (self *Build) Run(state *state.State, opt *parser.Option) (err error) {
 	defer Handle(&err)
 
 	self.state = state

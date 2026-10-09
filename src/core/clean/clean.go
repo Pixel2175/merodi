@@ -3,6 +3,7 @@ package clean
 import (
 	"merodi/src/config"
 	"merodi/src/core/state"
+	"merodi/src/parser"
 	. "merodi/src/utils/errs"
 	"os"
 )
@@ -11,7 +12,7 @@ type Clean struct {
 	State *state.State
 }
 
-func (self *Clean) Run(state *state.State, args *[]string) (err error) {
+func (self *Clean) Run(state *state.State, opt *parser.Option) (err error) {
 	defer Handle(&err)
 	self.State = state
 

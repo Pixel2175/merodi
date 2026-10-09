@@ -7,9 +7,9 @@ import (
 	"os"
 )
 
-func (self *State) GoToProjectDir(args *[]string) (err error) {
+func (self *State) GoToProjectDir(dir string) (err error) {
 	defer Handle(&err)
-	dir := CheckV(project.SetProjectDir(args))
+	dir = CheckV(project.SetProjectDir(dir))
 	self.ProjectDir = dir
 	CheckE(os.Chdir(dir))
 	return

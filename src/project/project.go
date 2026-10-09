@@ -1,24 +1,22 @@
 package project
 
 import (
-	"merodi/src/utils"
 	. "merodi/src/utils/errs"
 	"merodi/src/utils/path"
 	"os"
 	"path/filepath"
 )
 
-func GetProjectDir(args *[]string)  (string, error) {
-	projectPath := path.Getwd()
-	if len(*args) > 0 {
-		projectPath = utils.Pop(args, 0)
+func GetProjectDir(dir string) (string, error) {
+	if dir == "" {
+		dir = path.Getwd()
 	}
 
-	return filepath.Abs(projectPath)
+	return filepath.Abs(dir)
 }
 
-func SetProjectDir(args *[]string) (string, error) {
-	projectPath := CheckV(GetProjectDir(args))
+func SetProjectDir(dir string) (string, error) {
+	projectPath := CheckV(GetProjectDir(dir))
 
 	for projectPath != "/" {
 		if IsProjectExists(projectPath) {

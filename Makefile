@@ -1,6 +1,9 @@
 BINARY := merodi
 PREFIX := $(if $(filter 0,$(shell id -u)),/usr/bin,$(HOME)/.local/bin)
 TARGET := $(PREFIX)/$(BINARY)
+VERSION := 0.5.2
+COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
+LDFLAGS := -X 'merodi/src/parser.VERSION=$(VERSION)$(if $(COMMIT), (git: $(COMMIT)))'
 
 .PHONY: all build install uninstall clean test
 
@@ -8,7 +11,7 @@ all: build
 
 build:
 	@printf "\033[1;34m==>\033[0m Compiling $(BINARY)...\n"
-	@go build -o $(BINARY) ./src/main.go
+	@go build -ldflags="$(LDFLAGS)" -o $(BINARY) ./src/main.go
 	@printf "\033[1;32m==>\033[0m Built \033[1m./$(BINARY)\033[0m\n"
 
 install: build
