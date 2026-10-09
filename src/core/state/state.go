@@ -4,10 +4,11 @@ import (
 	"merodi/src/config"
 	. "merodi/src/config"
 	"merodi/src/core/build/compile/jinja"
+	"merodi/src/parser"
 	. "merodi/src/utils/errs"
 
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/parser"
+	gparser "github.com/yuin/goldmark/parser"
 	glua "github.com/yuin/gopher-lua"
 )
 
@@ -20,6 +21,7 @@ type State struct {
 	Lua        Lua
 	Markdown   Markdown
 	Watch      Watcher
+	Action     parser.Action
 }
 
 type Lua struct {
@@ -36,7 +38,7 @@ type Build struct {
 
 type Markdown struct {
 	Extensions    []goldmark.Extender
-	ParsersOption []parser.Option
+	ParsersOption []gparser.Option
 	Page          jinja.Page
 }
 
@@ -53,6 +55,7 @@ func InitGlobals() State {
 		Watch:      Watcher{},
 		Hooks:      make(map[string]*glua.LFunction),
 		Lua:        Lua{},
+		Action:     parser.Help,
 	}
 }
 

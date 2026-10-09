@@ -1,6 +1,8 @@
 -- Hooks let your plugin run code at different stages of the build.
 -- Hook functions don't take arguments or return anything. Use merodi.build.* to
 
+merodi.action() -- Returns the current command as a string: "build", "watch", "clean", or "hook".
+
 merodi.hook("before_read", function() end)      -- runs before the Markdown file is read
 merodi.hook("read_md", function() end)          -- runs after the raw Markdown has been read
 merodi.hook("html_content", function() end)     -- runs after the Markdown is converted to HTML

@@ -25,17 +25,16 @@ var Actions = map[parser.Action]Action{
 func Run(opt *parser.Option) (err error) {
 	defer Handle(&err)
 	state := InitGlobals()
-
-	action := Actions[opt.Action]
-
+	state.Action = opt.Action
 	state.Build.Mode = opt.Mode
+
 	CheckE(state.GoToProjectDir(opt.ProjectDir))
 	CheckE(state.LoadConfig())
 	if opt.Action != parser.Clean {
 		CheckE(lua.Init(&state))
 		defer state.Lua.Context.Close()
 	}
-	CheckE(action.Run(&state, opt))
+	CheckE(Actions[opt.Action].Run(&state, opt))
 
 	return nil
 }
